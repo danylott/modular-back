@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Bootstrap Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        p {
+            text-align: center;
+        }
+    </style>
+</head>
+
+
+<body>
+<div class="jumbotron text-center">
+    <h1>Welcome to Krack recognition</h1>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-4">
+            <% if(typeof image != 'undefined' && typeof size != 'undefined' && typeof name != 'undefined'){ %>
+                <div style="height: 400px;"><img src="/uploads/<%= image %>" height="400"
+                                                 width="390"></div>
+            <% } else{ %>
+                <div style="height: 400px;"><img src="/uploads/error.png" height="400"
+                                                 width="390" ></div>
+                <script>
+                    setTimeout(function () {
+                        location.reload();
+                    }, 5000);
+                </script>
+            <% } %>
+        </div>
+        <div class="col-xs-4" style="margin-left: 300px;">
+            <div style="background-color:lightgrey; height: 400px;">
+                <% if (typeof size != 'undefined' && typeof name != 'undefined') { %>
+                    <p><%= size %></p>
+                    <p><%= name %></p>
+                <% } else{ %>
+                    <p>Size not recognized yet</p>
+                    <p>Name not recognized yet</p>
+                    <script>
+                        setTimeout(function () {
+                            location.reload();
+                        }, 5000);
+                    </script>
+                <% } %>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-11" style="text-align: center">
+        <button onclick=location.reload();>Ok</button>
+        <button type="button">Siguiente!</button>
+        <button onclick="httpGet()">Salir</button>
+    </div>
+</div>
+
+<script>
+    function httpGet(){
+        window.location.replace("http://localhost:3000/welcome");
+    }
+</script>
+</body>
+</html>
