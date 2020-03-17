@@ -30,25 +30,22 @@ app.set("view engine", "ejs");
 //ROUTES WILL GO HERE
 app.get('/', function (req, res) {
     let imageSrc;
-    let name;
-    let size;
-
-    if (typeof globalFileName !== 'undefined') {
-        imageSrc = globalFileName;
-    }
-
-    if (typeof globalSize !== 'undefined' && globalSize) {
-        size = globalSize;
-    }
-
-    if (typeof globalName !== 'undefined' && globalName) {
-        name = globalName;
-    }
+    let val1, val2, val3, val4, val5;
+    typeof globalFileName !== 'undefined' ? imageSrc = globalFileName : undefined;
+    typeof globalVal1 !== 'undefined' ? val1 = globalVal1 : undefined;
+    typeof globalVal2 !== 'undefined' ? val2 = globalVal2 : undefined;
+    typeof globalVal3 !== 'undefined' ? val3 = globalVal3 : undefined;
+    typeof globalVal4 !== 'undefined' ? val4 = globalVal4 : undefined;
+    typeof globalVal5 !== 'undefined' ? val5 = globalVal5 : undefined;
 
     delete global.globalFileName;
-    delete global.globalName;
-    delete global.globalSize;
-    res.render('index', {image: imageSrc, name:name, size:size})
+    delete global.globalVal1;
+    delete global.globalVal2;
+    delete global.globalVal3;
+    delete global.globalVal4;
+    delete global.globalVal5;
+
+    res.render('index', {image: imageSrc, val1: val1, val2: val2, val3: val3, val4: val4, val5: val5})
 
 });
 
@@ -58,17 +55,18 @@ app.get('/welcome', function (req, res) {
 });
 
 app.post('/upload', upload.single('image'), (req, res, next) => {
-    const file = req.file.originalname;
-    global.globalSize = req.body.size;
-    global.globalName = req.body.name;
+    global.globalVal1 = req.body.val1;
+    global.globalVal2 = req.body.val2;
+    global.globalVal3 = req.body.val3;
+    global.globalVal4 = req.body.val4;
+    global.globalVal5 = req.body.val5;
 
-    if (!file) {
-        const error = new Error('Please upload a file');
-        error.httpStatusCode = 400;
-        return next(error)
+
+    if (!req.file.originalname) {
+        throw new Error('Please upload a file');
     }
 
-    res.json({success: true})
+    res.status(200).send({ success: true});
 });
 
 app.listen(3000, () => console.log('Server started on port 3000'));

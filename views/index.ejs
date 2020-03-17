@@ -10,6 +10,7 @@
     <style>
         p {
             text-align: center;
+            padding-top: 100px;
         }
     </style>
 </head>
@@ -22,46 +23,54 @@
 <div class="container">
     <div class="row">
         <div class="col-xs-4">
-            <% if(typeof image != 'undefined' && typeof size != 'undefined' && typeof name != 'undefined'){ %>
-                <div style="height: 400px;"><img src="/uploads/<%= image %>" height="400"
-                                                 width="390"></div>
+            <% if(typeof image != 'undefined'){ %>
+            <div style="height: 400px;"><img src="/uploads/<%= image %>" height="400"
+                                             width="390"></div>
             <% } else{ %>
-                <div style="height: 400px;"><img src="/uploads/error.png" height="400"
-                                                 width="390" ></div>
-                <script>
-                    setTimeout(function () {
-                        location.reload();
-                    }, 5000);
-                </script>
+            <div style="height: 400px;"><img src="/uploads/error.png" height="400"
+                                             width="390"></div>
+            <script>
+                setTimeout(function () {
+                    location.reload();
+                }, 5000000);
+            </script>
             <% } %>
         </div>
         <div class="col-xs-4" style="margin-left: 300px;">
-            <div style="background-color:lightgrey; height: 400px;">
-                <% if (typeof size != 'undefined' && typeof name != 'undefined') { %>
-                    <p><%= size %></p>
-                    <p><%= name %></p>
-                <% } else{ %>
-                    <p>Size not recognized yet</p>
-                    <p>Name not recognized yet</p>
+            <div style="background-color:#eee; height: 200px; margin-top: 80px">
+                <ul class="list-group">
+                    <% if (typeof val1 != 'undefined' && typeof val2 != 'undefined') { %>
+                    <li class="list-group-item"><%= val1 %></li>
+                    <li class="list-group-item"><%= val2 %></li>
+                    <li class="list-group-item"><%= val3 %></li>
+                    <li class="list-group-item"><%= val4 %></li>
+                    <li class="list-group-item"><%= val5 %></li>
+                    <% } else{ %>
+                    <li class="list-group-item">No data to show</li>
+                    <li class="list-group-item">No data to show</li>
+                    <li class="list-group-item">No data to show</li>
+                    <li class="list-group-item">No data to show</li>
+                    <li class="list-group-item">No data to show</li>
                     <script>
                         setTimeout(function () {
                             location.reload();
-                        }, 5000);
+                        }, 5000000);
                     </script>
+                </ul>
                 <% } %>
 
             </div>
         </div>
     </div>
     <div class="col-xs-11" style="text-align: center">
-        <button onclick=location.reload();>Ok</button>
-        <button type="button">Siguiente!</button>
-        <button onclick="httpGet()">Salir</button>
+        <button onclick=location.reload(); type="button" class="btn btn-success">Ok</button>
+        <button type="button" class="btn btn-primary">Siguiente</button>
+        <button onclick="httpGet()" type="button" class="btn btn-danger">Salir</button>
     </div>
 </div>
 
 <script>
-    function httpGet(){
+    function httpGet() {
         window.location.replace("http://localhost:3000/welcome");
     }
 </script>
