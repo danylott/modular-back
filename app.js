@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 //ROUTES WILL GO HERE
-app.get('/', function (req, res) {
+app.get('/recognize', function (req, res) {
     let imageSrc;
     let val1, val2, val3, val4, val5;
     typeof globalFileName !== 'undefined' ? imageSrc = globalFileName : undefined;
@@ -49,7 +49,7 @@ app.get('/', function (req, res) {
 
 });
 
-app.get('/welcome', function (req, res) {
+app.get('/', function (req, res) {
 
     res.render('welcome');
 });
