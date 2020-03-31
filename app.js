@@ -47,7 +47,7 @@ app.get('/recognize', function (req, res) {
     delete global.globalVal5;
 
     // res.render('index', {image: imageSrc, val1: val1, val2: val2, val3: val3, val4: val4, val5: val5})
-    res.sendFile(path.join(__dirname, './views/not-found-camera.html'));
+    res.sendFile(path.join(__dirname, './views/recognize.html'));
 });
 
 app.get('/', function (req, res) {

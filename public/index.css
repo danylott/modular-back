@@ -1,0 +1,22 @@
+.welcome_title_wrapper {
+    text-align: center;
+}
+
+.welcome__top_title,
+.welcome__bottom_title {
+    font-style: normal;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 56px;
+    letter-spacing: -2px;
+    font-stretch: ultra-condensed;
+}
+
+.welcome__top_title {
+    color: #E0E0E0;
+    margin-top: 67px;
+}
+
+.welcome__bottom_title {
+    color: #333333;
+}
