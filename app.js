@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
 const app = express();
+const path = require('path');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -45,13 +46,13 @@ app.get('/recognize', function (req, res) {
     delete global.globalVal4;
     delete global.globalVal5;
 
-    res.render('index', {image: imageSrc, val1: val1, val2: val2, val3: val3, val4: val4, val5: val5})
-
+    // res.render('index', {image: imageSrc, val1: val1, val2: val2, val3: val3, val4: val4, val5: val5})
+    res.sendFile(path.join(__dirname, './views/not-found-camera.html'));
 });
 
 app.get('/', function (req, res) {
 
-    res.render('welcome');
+    res.sendFile(path.join(__dirname, './views/welcome.html'));
 });
 
 app.post('/upload', upload.single('image'), (req, res, next) => {

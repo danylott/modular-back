@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>No detected</title>
+    <link rel="stylesheet" href="../css/index.css">
+</head>
+<body>
+<div class="container">
+    <div class="container_top_line">
+        <div class="container_top_line_title">KRACK RECOGNITION</div>
+        <button class="container_top_line_button" onclick="httpGet()">SALIR</button>
+    </div>
+    <div class="container__main_content">
+        <div class="container__camera_image__wrapper">
+            <img src="../img/camera.png" alt="camera" class="container_camera__image">
+            <div class="container__camera_info">We can't find your camera</div>
+        </div>
+        <div class="container__info">
+            <div>
+                <div class="container__info_sub_title">CAMERA NOT FOUND</div>
+            </div>
+        </div>
+    </div>
+    <div class="copy_author">Copyright © 2020 Krack Recognition</div>
+</div>
+<script>
+    function httpGet() {
+        window.location.replace("/");
+    }
+</script>
+</body>
+</html>
