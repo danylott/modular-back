@@ -5,6 +5,18 @@ const fs = require('fs');
 const app = express();
 const path = require('path');
 
+//AWS
+require('dotenv').config();
+const AWS = require('aws-sdk');
+AWS.config.region = "us-east-1";
+//TODO set AWS KEYS!!!!!!!!!!!!!!!!!!!!!!!!!!
+const rekognition = new AWS.Rekognition({region: "us-east-1"});
+
+const {markRecognition, modelRecognition, colorRecognition, sizeRecognition} = require("./helpers/recognize");
+
+//stream of files, so every next will overwrite previous, to avoid mess
+const fileNameForPresentation = '11112222233334444555666777';
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const dir = 'public/uploads';
@@ -16,38 +28,32 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: function (req, file, cb) {
-        const fileName = Date.now() + '-' + file.originalname;
-        global.globalFileName = fileName;
+        // const fileName = Date.now() + '-' + file.originalname;
+        const fileName = fileNameForPresentation + path.extname(file.originalname);
         cb(null, fileName)
     }
 });
-
 const upload = multer({storage: storage});
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
-//ROUTES WILL GO HERE
 app.get('/recognize', function (req, res) {
-    let imageSrc;
-    let val1, val2, val3, val4, val5;
-    typeof globalFileName !== 'undefined' ? imageSrc = globalFileName : undefined;
-    typeof globalVal1 !== 'undefined' ? val1 = globalVal1 : undefined;
-    typeof globalVal2 !== 'undefined' ? val2 = globalVal2 : undefined;
-    typeof globalVal3 !== 'undefined' ? val3 = globalVal3 : undefined;
-    typeof globalVal4 !== 'undefined' ? val4 = globalVal4 : undefined;
-    typeof globalVal5 !== 'undefined' ? val5 = globalVal5 : undefined;
+    let model, color, size, mark, imageSrc;
+    typeof globalModel !== 'undefined' ? model = globalModel : undefined;
+    typeof globalColor !== 'undefined' ? color = globalColor : undefined;
+    typeof glocalSize !== 'undefined' ? size = glocalSize : undefined;
+    typeof globalMark !== 'undefined' ? mark = globalMark : undefined;
+    typeof globalImageSrc !== 'undefined' ? imageSrc = globalImageSrc : undefined;
 
-    delete global.globalFileName;
-    delete global.globalVal1;
-    delete global.globalVal2;
-    delete global.globalVal3;
-    delete global.globalVal4;
-    delete global.globalVal5;
+    delete global.globalModel;
+    delete global.globalColor;
+    delete global.glocalSize;
+    delete global.globalMark;
+    delete global.globalImageSrc;
 
-    // res.render('index', {image: imageSrc, val1: val1, val2: val2, val3: val3, val4: val4, val5: val5})
-    res.sendFile(path.join(__dirname, './views/recognize.html'));
+    res.render('recognize.ejs', {model: model, color: color, size: size, mark: mark, imageSrc: imageSrc});
 });
 
 app.get('/', function (req, res) {
@@ -56,18 +62,39 @@ app.get('/', function (req, res) {
 });
 
 app.post('/upload', upload.single('image'), (req, res, next) => {
-    global.globalVal1 = req.body.val1;
-    global.globalVal2 = req.body.val2;
-    global.globalVal3 = req.body.val3;
-    global.globalVal4 = req.body.val4;
-    global.globalVal5 = req.body.val5;
+    let bitmap = fs.readFileSync(req.file.path);
+    let model;
+    let color;
+    let size;
+    let mark;
 
+    rekognition.detectText({
+        "Image": {
+            "Bytes": bitmap,
+        }
+    }, async function (err, data) {
 
-    if (!req.file.originalname) {
-        throw new Error('Please upload a file');
-    }
+        if (err) {
+            console.log(err)
+        }
+        for (let words of data.TextDetections) {
+            model = model ? model : modelRecognition(words.DetectedText);
+            color = color ? color : colorRecognition(words.DetectedText);
+            size = size ? size : sizeRecognition(words.DetectedText);
+            mark = mark ? mark : markRecognition(words.DetectedText);
+        }
 
-    res.status(200).send({ success: true});
+        global.globalModel = model;
+        global.globalColor = color;
+        global.glocalSize = size;
+        global.globalMark = mark;
+        global.globalImageSrc = req.file.filename;
+
+        res.status(200).send({
+            success: true, data: {model, color, size, mark}
+        });
+    });
 });
+
 
 app.listen(3000, () => console.log('Server started on port 3000'));

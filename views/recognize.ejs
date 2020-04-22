@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Krack Recognition</title>
     <link rel="stylesheet" href="../css/index.css">
-    <link rel="shortcut icon" href="/uploads/fav.png" />
+    <link rel="shortcut icon" href="/uploads/fav.png"/>
 </head>
 <body>
 <div class="container">
@@ -14,8 +14,14 @@
     </div>
     <div class="container__main_content">
         <div class="container__camera_image__wrapper" style="width: 1200px">
-            <img src="../img/camera.png" alt="camera" class="container_camera__image">
-            <div class="container__camera_info">La cámara no está disponible</div>
+            <% if(imageSrc){ %>
+            <img src="../uploads/<%= imageSrc %>" class="container_camera__image"
+                 style="width: 80%; height: 80%">
+            <% } else{ %>
+                <img src="../img/camera.png" alt="camera" class="container_camera__image">
+                <div class="container__camera_info">La cámara no está disponible</div>
+            <% } %>
+
         </div>
         <div class="container__info">
             <div>
@@ -25,21 +31,21 @@
                     <div class="container__info_line">
                         <div class="container__info_item">
                             <div class="container__info_item_title">MARCA</div>
-                            <div class="container__info_item_value">GANT</div>
+                            <div class="container__info_item_value"><%= mark %></div>
                         </div>
                         <div class="container__info_item">
                             <div class="container__info_item_title">COLOR</div>
-                            <div class="container__info_item_value">BLACK</div>
+                            <div class="container__info_item_value"><%= color %></div>
                         </div>
                     </div>
                     <div class="container__info_line">
                         <div class="container__info_item">
                             <div class="container__info_item_title">MODELO</div>
-                            <div class="container__info_item_value">BROGUES</div>
+                            <div class="container__info_item_value"><%= model %></div>
                         </div>
                         <div class="container__info_item">
                             <div class="container__info_item_title">TALLA</div>
-                            <div class="container__info_item_value">40</div>
+                            <div class="container__info_item_value"><%= size %></div>
                         </div>
                     </div>
                 </div>
@@ -70,13 +76,20 @@
                     </div>
                 </div>
             </div>
-            <button class="bottom_btn" style="width: 450px">OK - SIGUIENTE</button>
+            <button class="bottom_btn" style="width: 450px" onclick=location.reload();>OK - SIGUIENTE</button>
         </div>
     </div>
     <div class="copy_author">Copyright © 2020 Krack Recognition</div>
 </div>
 
 <script>
+
+    <% if(typeof imageSrc === 'undefined'){ %>
+    setTimeout(function () {
+        location.reload();
+    }, 1000);
+    <% } %>
+
     function httpGet() {
         window.location.replace("/");
     }
