@@ -84,11 +84,13 @@ app.post('/upload', upload.single('image'), (req, res, next) => {
             mark = mark ? mark : markRecognition(words.DetectedText);
         }
 
-        global.globalModel = model;
-        global.globalColor = color;
-        global.glocalSize = size;
-        global.globalMark = mark;
-        global.globalImageSrc = req.file.filename;
+        if (model && color && size && mark){
+            global.globalModel = model;
+            global.globalColor = color;
+            global.glocalSize = size;
+            global.globalMark = mark;
+            global.globalImageSrc = req.file.filename;
+        }
 
         res.status(200).send({
             success: true, data: {model, color, size, mark}

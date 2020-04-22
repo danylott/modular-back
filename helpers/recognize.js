@@ -6,13 +6,20 @@ module.exports = {
             if (detectedWord[1].includes("1)")) {
                 detectedWord[1] = detectedWord[1].replace("1)", "");
             }
+
+            if (detectedWord[1].includes("0)")){
+                detectedWord[1] = detectedWord[1].replace("0)", "");
+            }
             return detectedWord[1].trim();
         }
     },
 
     modelRecognition: function (detectedWord) {
-        if (detectedWord.includes(" S.L.") || detectedWord.includes(" SL")) {
-            return detectedWord;
+        if (detectedWord.includes("S.L.") || detectedWord.includes(" SL")) {
+            if (detectedWord.includes(" 1)")) {
+                detectedWord = detectedWord.replace("1)", "");
+            }
+            return detectedWord.trim();
         }
     },
 
