@@ -4,12 +4,11 @@ const multer = require('multer');
 const fs = require('fs');
 const app = express();
 const path = require('path');
-
 //AWS
 require('dotenv').config();
+
 const AWS = require('aws-sdk');
 AWS.config.region = "us-east-1";
-//TODO set AWS KEYS!!!!!!!!!!!!!!!!!!!!!!!!!!
 const rekognition = new AWS.Rekognition({region: "us-east-1"});
 
 const {markRecognition, modelRecognition, colorRecognition, sizeRecognition} = require("./helpers/recognize");
@@ -61,6 +60,21 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, './views/welcome.html'));
 });
 
+app.post('/barcode', upload.single('image'), (req, res) => {
+    const barDecoder = require('node-zbardecoder');
+    if (!req.file) {
+        throw new Error("File wasn't sent");
+    }
+
+    const barCodeImage = req.file.path;
+    const result = JSON.parse(barDecoder.decode(barCodeImage));
+
+    res.status(200).send({
+        success: true,
+        data: result.results[0].data
+    });
+});
+
 app.post('/upload', upload.single('image'), (req, res, next) => {
     let bitmap = fs.readFileSync(req.file.path);
     let model;
@@ -84,7 +98,7 @@ app.post('/upload', upload.single('image'), (req, res, next) => {
             mark = mark ? mark : markRecognition(words.DetectedText);
         }
 
-        if (model && color && size && mark){
+        if (model && color && size && mark) {
             global.globalModel = model;
             global.globalColor = color;
             global.glocalSize = size;
