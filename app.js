@@ -4,6 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const app = express();
 const path = require('path');
+const request = require("request");
 //AWS
 require('dotenv').config();
 
@@ -68,10 +69,17 @@ app.post('/barcode', upload.single('image'), (req, res) => {
 
     const barCodeImage = req.file.path;
     const result = JSON.parse(barDecoder.decode(barCodeImage));
+    console.log(result);
 
-    res.status(200).send({
-        success: true,
-        data: result.results[0].data
+    request(`http://conexion1.globalretail.es:57354/api/recognition/ean/${result.results[0].data}`, function(error, response, body) {
+        if (!error && response.statusCode === 200) {
+            body = JSON.parse(body);
+            global.barCodeDate = body;
+            res.status(200).send({
+                success: true,
+                data: body.data
+            });
+        }
     });
 });
 
