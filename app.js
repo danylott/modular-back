@@ -1,4 +1,6 @@
 const express = require('express');
+const morgan = require('morgan');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
@@ -7,7 +9,7 @@ const path = require('path');
 const barDecoder = require('node-zbardecoder');
 
 
-const {markRecognition, modelRecognition, colorRecognition, sizeRecognition, awsApiRecognition} = require("./helpers/recognize");
+const {awsApiRecognition} = require("./helpers/recognize");
 const {curlGetByBarCode, curlPostWithParams} = require("./helpers/curlWrapper");
 
 //stream of files, so every next will overwrite previous, to avoid mess
@@ -31,23 +33,16 @@ const storage = multer.diskStorage({
 });
 const upload = multer({storage: storage});
 
+app.use(morgan('combined', {
+    skip: function (req, res) { return res.statusCode < 400 }
+}));
+app.use(helmet());
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 app.get('/recognize', function (req, res) {
     let model, color, size, mark, imageSrc;
-    // typeof globalModel !== 'undefined' ? model = globalModel : undefined;
-    // typeof globalColor !== 'undefined' ? color = globalColor : undefined;
-    // typeof glocalSize !== 'undefined' ? size = glocalSize : undefined;
-    // typeof globalMark !== 'undefined' ? mark = globalMark : undefined;
-    // typeof globalImageSrc !== 'undefined' ? imageSrc = globalImageSrc : undefined;
-    //
-    // delete global.globalModel;
-    // delete global.globalColor;
-    // delete global.glocalSize;
-    // delete global.globalMark;
-    // delete global.globalImageSrc;
 
     typeof globalDataByApiRequest !== 'undefined' ? model = globalDataByApiRequest.modelName : undefined;
     typeof globalDataByApiRequest !== 'undefined' ? color = globalDataByApiRequest.color.name : undefined;
@@ -112,43 +107,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         data: curlGet.data
     });
 });
-
-// app.post('/upload2', upload.single('image'), (req, res, next) => {
-//     let bitmap = fs.readFileSync(req.file.path);
-//     let model;
-//     let color;
-//     let size;
-//     let mark;
-//
-//     rekognition.detectText({
-//         "Image": {
-//             "Bytes": bitmap,
-//         }
-//     }, async function (err, data) {
-//
-//         if (err) {
-//             console.log(err)
-//         }
-//         for (let words of data.TextDetections) {
-//             model = model ? model : modelRecognition(words.DetectedText);
-//             color = color ? color : colorRecognition(words.DetectedText);
-//             size = size ? size : sizeRecognition(words.DetectedText);
-//             mark = mark ? mark : markRecognition(words.DetectedText);
-//         }
-//
-//         if (model && color && size && mark) {
-//             global.globalModel = model;
-//             global.globalColor = color;
-//             global.glocalSize = size;
-//             global.globalMark = mark;
-//             global.globalImageSrc = req.file.filename;
-//         }
-//
-//         res.status(200).send({
-//             success: true, data: {model, color, size, mark}
-//         });
-//     });
-// });
 
 
 app.listen(3000, () => console.log('Server started on port 3000'));
