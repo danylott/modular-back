@@ -1,5 +1,13 @@
+//AWS
+require('dotenv').config();
+
+const AWS = require('aws-sdk');
+AWS.config.region = "us-east-1";
+const rekognition = new AWS.Rekognition({region: "us-east-1"});
+const a = 322;
+
 module.exports = {
-    markRecognition: function (detectedWord) {
+    modelRecognition: function (detectedWord) {
         //matching on two word or colon, only mark has colon on this pic
         if (detectedWord.toLowerCase().includes("msrca") || detectedWord.toLowerCase().includes("macs") || detectedWord.toLowerCase().includes(":")) {
             detectedWord = detectedWord.split(":");
@@ -7,19 +15,16 @@ module.exports = {
                 detectedWord[1] = detectedWord[1].replace("1)", "");
             }
 
-            if (detectedWord[1].includes("0)")){
+            if (detectedWord[1].includes("0)")) {
                 detectedWord[1] = detectedWord[1].replace("0)", "");
             }
             return detectedWord[1].trim();
         }
     },
 
-    modelRecognition: function (detectedWord) {
-        if (detectedWord.includes("S.L.") || detectedWord.includes(" SL")) {
-            if (detectedWord.includes(" 1)")) {
-                detectedWord = detectedWord.replace("1)", "");
-            }
-            return detectedWord.trim();
+    brandRecognition: function (detectedWord) {
+        if (detectedWord.toLowerCase().includes("krack")) {
+            return detectedWord;
         }
     },
 
@@ -34,15 +39,30 @@ module.exports = {
             return detectedWord;
         }
     },
+
+    //get text from image and recognize it, return if we have match
+    awsApiRecognition: function (bitmap) {
+        const awsRecognitionData = {};
+
+        return new Promise((resolve, reject) => {
+            rekognition.detectText({"Image": {"Bytes": bitmap,}}, (err, data) => {
+
+                if (!err) {
+                    for (let words of data.TextDetections) {
+                        awsRecognitionData.color = awsRecognitionData.color ? awsRecognitionData.color : module.exports.colorRecognition(words.DetectedText)
+                        awsRecognitionData.model = awsRecognitionData.model ? awsRecognitionData.model : module.exports.modelRecognition(words.DetectedText)
+                        awsRecognitionData.size = awsRecognitionData.size ? awsRecognitionData.size : module.exports.sizeRecognition(words.DetectedText)
+                        awsRecognitionData.brand = awsRecognitionData.brand ? awsRecognitionData.brand : module.exports.brandRecognition(words.DetectedText)
+                    }
+
+
+                    resolve(awsRecognitionData)
+                }
+
+                reject()
+            });
+        })
+
+    }
 };
 
-
-// модель - 833 XI FOOTWEAR, S.L.
-// марка - XTI 118
-// цвет - NEGRO
-// размер - 37
-
-// модель  /([0-9+][\sA-Z,.]+)\n/i.exec(firstLineItems.join(' '))
-// марка /M[as]rca:([\sA-Z,.0-9$]+)/i.exec(secondLineItems.join(' '))
-// колір /^\s*(NERGRO)\s*$/i
-// розмір /^\s*([234][0-9])\s*$/
