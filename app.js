@@ -4,7 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const app = express();
 const path = require('path');
-const request = require("request");
+
 //AWS
 require('dotenv').config();
 
@@ -13,6 +13,7 @@ AWS.config.region = "us-east-1";
 const rekognition = new AWS.Rekognition({region: "us-east-1"});
 
 const {markRecognition, modelRecognition, colorRecognition, sizeRecognition} = require("./helpers/recognize");
+const {curlGetByBarCode} = require("./helpers/curlWrapper");
 
 //stream of files, so every next will overwrite previous, to avoid mess
 const fileNameForPresentation = '11112222233334444555666777';
@@ -41,27 +42,33 @@ app.set("view engine", "ejs");
 
 app.get('/recognize', function (req, res) {
     let model, color, size, mark, imageSrc;
-    typeof globalModel !== 'undefined' ? model = globalModel : undefined;
-    typeof globalColor !== 'undefined' ? color = globalColor : undefined;
-    typeof glocalSize !== 'undefined' ? size = glocalSize : undefined;
-    typeof globalMark !== 'undefined' ? mark = globalMark : undefined;
-    typeof globalImageSrc !== 'undefined' ? imageSrc = globalImageSrc : undefined;
+    // typeof globalModel !== 'undefined' ? model = globalModel : undefined;
+    // typeof globalColor !== 'undefined' ? color = globalColor : undefined;
+    // typeof glocalSize !== 'undefined' ? size = glocalSize : undefined;
+    // typeof globalMark !== 'undefined' ? mark = globalMark : undefined;
+    // typeof globalImageSrc !== 'undefined' ? imageSrc = globalImageSrc : undefined;
+    //
+    // delete global.globalModel;
+    // delete global.globalColor;
+    // delete global.glocalSize;
+    // delete global.globalMark;
+    // delete global.globalImageSrc;
 
-    delete global.globalModel;
-    delete global.globalColor;
-    delete global.glocalSize;
-    delete global.globalMark;
-    delete global.globalImageSrc;
+    typeof globalDataByBarCode !== 'undefined' ? model = globalDataByBarCode.modelName : undefined;
+    typeof globalDataByBarCode !== 'undefined' ? color = globalDataByBarCode.color.name : undefined;
+    typeof globalDataByBarCode !== 'undefined' ? size = globalDataByBarCode.size.number : undefined;
+    typeof globalDataByBarCode !== 'undefined' ? mark = globalDataByBarCode.brand.name : undefined;
+    typeof globalDataByBarCode !== 'undefined' ? imageSrc = globalDataByBarCode.localImgSrc : undefined;
+    delete global.globalDataByBarCode;
 
     res.render('recognize.ejs', {model: model, color: color, size: size, mark: mark, imageSrc: imageSrc});
 });
 
 app.get('/', function (req, res) {
-
     res.sendFile(path.join(__dirname, './views/welcome.html'));
 });
 
-app.post('/barcode', upload.single('image'), (req, res) => {
+app.post('/upload', upload.single('image'), async (req, res) => {
     const barDecoder = require('node-zbardecoder');
     if (!req.file) {
         throw new Error("File wasn't sent");
@@ -69,21 +76,34 @@ app.post('/barcode', upload.single('image'), (req, res) => {
 
     const barCodeImage = req.file.path;
     const result = JSON.parse(barDecoder.decode(barCodeImage));
-    console.log(result);
 
-    request(`http://conexion1.globalretail.es:57354/api/recognition/ean/${result.results[0].data}`, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            body = JSON.parse(body);
-            global.barCodeDate = body;
-            res.status(200).send({
-                success: true,
-                data: body.data
-            });
-        }
-    });
+    if (result.results.length === 0) {
+        res.status(404).send({
+            success: false,
+            message: "No barcode was detected."
+        });
+    }
+
+    try {
+        const curlGet = await curlGetByBarCode(result.results[0].data);
+
+        curlGet.data.localImgSrc = req.file.filename;
+
+        global.globalDataByBarCode = curlGet.data;
+
+        res.status(200).send({
+            success: true,
+            data: curlGet.data
+        });
+    } catch (e) {
+        res.status(404).send({
+            success: false,
+            message: "NotFoundEntityException. API hasn't any data by this barcode."
+        });
+    }
 });
 
-app.post('/upload', upload.single('image'), (req, res, next) => {
+app.post('/upload2', upload.single('image'), (req, res, next) => {
     let bitmap = fs.readFileSync(req.file.path);
     let model;
     let color;
