@@ -9,7 +9,8 @@ const a = 322;
 module.exports = {
     modelRecognition: function (detectedWord) {
         //matching on two word or colon, only mark has colon on this pic
-        if (detectedWord.toLowerCase().includes("msrca") || detectedWord.toLowerCase().includes("macs") || detectedWord.toLowerCase().includes(":")) {
+        console.log(detectedWord);
+        if (detectedWord.toLowerCase().includes(":") && !detectedWord.toLowerCase().includes('col') && !detectedWord.toLowerCase().includes('mod')) {
             detectedWord = detectedWord.split(":");
             if (detectedWord[1].includes("1)")) {
                 detectedWord[1] = detectedWord[1].replace("1)", "");
@@ -18,19 +19,32 @@ module.exports = {
             if (detectedWord[1].includes("0)")) {
                 detectedWord[1] = detectedWord[1].replace("0)", "");
             }
+
             return detectedWord[1].trim();
+        }
+
+        if (detectedWord.toLowerCase().includes("fila ")) {
+            return detectedWord;
+        }
+
+        if (detectedWord.toLowerCase() === '061101' || detectedWord.toLowerCase() === 'etel') {
+            return detectedWord;
         }
     },
 
     brandRecognition: function (detectedWord) {
-        if (detectedWord.toLowerCase().includes("krack")) {
+        if (detectedWord.toLowerCase().includes("krack") || detectedWord.toLowerCase() === "fila" || detectedWord.toLowerCase() === "victoria" || detectedWord.toLowerCase() === "converse" ) {
             return detectedWord;
         }
     },
 
     colorRecognition: function (detectedWord) {
-        if (detectedWord.toLowerCase() === "negro") {
+        if (detectedWord.toLowerCase() === "negro" || detectedWord.toLowerCase() === "blanco") {
             return detectedWord;
+        } else if (detectedWord.toLowerCase().includes("white")) {
+            return "White";
+        } else if(detectedWord.toLowerCase().includes('black')) {
+            return "Black";
         }
     },
 

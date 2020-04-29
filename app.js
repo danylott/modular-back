@@ -34,7 +34,9 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage});
 
 app.use(morgan('combined', {
-    skip: function (req, res) { return res.statusCode < 400 }
+    skip: function (req, res) {
+        return res.statusCode < 400
+    }
 }));
 app.use(helmet());
 app.use(express.static('public'));
@@ -42,16 +44,25 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 app.get('/recognize', function (req, res) {
-    let model, color, size, mark, imageSrc;
+    let model, color, size, mark, imageSrc, scannedData;
 
     typeof globalDataByApiRequest !== 'undefined' ? model = globalDataByApiRequest.modelName : undefined;
     typeof globalDataByApiRequest !== 'undefined' ? color = globalDataByApiRequest.color.name : undefined;
     typeof globalDataByApiRequest !== 'undefined' ? size = globalDataByApiRequest.size.number : undefined;
     typeof globalDataByApiRequest !== 'undefined' ? mark = globalDataByApiRequest.brand.name : undefined;
     typeof globalDataByApiRequest !== 'undefined' ? imageSrc = globalDataByApiRequest.localImgSrc : undefined;
+    typeof globalScannedDataFromImage !== 'undefined' ? scannedData = globalScannedDataFromImage : undefined;
     delete global.globalDataByApiRequest;
+    delete global.globalScannedDataFromImage;
 
-    res.render('recognize.ejs', {model: model, color: color, size: size, mark: mark, imageSrc: imageSrc});
+    res.render('recognize.ejs', {
+        model: model,
+        color: color,
+        size: size,
+        mark: mark,
+        imageSrc: imageSrc,
+        scannedData: scannedData
+    });
 });
 
 app.get('/', function (req, res) {
@@ -67,12 +78,13 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
     //detect if image/photo has a barcode
     const result = JSON.parse(barDecoder.decode(barCodeImage));
+    const bitmap = fs.readFileSync(req.file.path);
+    const data = await awsApiRecognition(bitmap);
 
+    console.log(data);
 
     //if image has no barcode
     if (result.results.length === 0) {
-        const bitmap = fs.readFileSync(req.file.path);
-        const data = await awsApiRecognition(bitmap);
 
         const postCurl = await curlPostWithParams(data);
 
@@ -86,7 +98,10 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         }
         postCurl.data.localImgSrc = req.file.filename;
 
+        //this data comes from an API KRACK
         global.globalDataByApiRequest = postCurl.data;
+        //this data comes from image via AS recognition api
+        global.globalScannedDataFromImage = data;
 
         res.status(200).send({
             success: true,
@@ -100,7 +115,10 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
     curlGet.data.localImgSrc = req.file.filename;
 
+    //this data comes from an API KRACK
     global.globalDataByApiRequest = curlGet.data;
+    //this data comes from image via AS recognition api
+    global.globalScannedDataFromImage = data;
 
     res.status(200).send({
         success: true,
