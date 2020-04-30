@@ -1,5 +1,5 @@
-const apiUrlForBarCode = process.env.GET_API_URL;
-const apiUrlPostWithBody = process.env.POST_API_URL;
-
-module.exports.apiUrlForBarCode = apiUrlForBarCode;
-module.exports.apiUrlPostWithBody = apiUrlPostWithBody;
+module.exports = {
+    COLORS: ['negro','white','blanco', 'black'],
+    BRANDS: ['krack', 'fila' , 'victoria', 'converse', 'camper'],
+    MODELS: ['all star hi', 'strada low wmn', 'etel', '061101', 'k200508 - 041']
+};

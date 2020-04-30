@@ -1,50 +1,36 @@
 //AWS
 require('dotenv').config();
-
 const AWS = require('aws-sdk');
 AWS.config.region = "us-east-1";
 const rekognition = new AWS.Rekognition({region: "us-east-1"});
-const a = 322;
+const {COLORS, BRANDS, MODELS} = require('./constants');
+
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
 
 module.exports = {
     modelRecognition: function (detectedWord) {
-        //matching on two word or colon, only mark has colon on this pic
-        console.log(detectedWord);
-        if (detectedWord.toLowerCase().includes(":") && !detectedWord.toLowerCase().includes('col') && !detectedWord.toLowerCase().includes('mod')) {
-            detectedWord = detectedWord.split(":");
-            if (detectedWord[1].includes("1)")) {
-                detectedWord[1] = detectedWord[1].replace("1)", "");
+        for (let model of MODELS) {
+            if (detectedWord.toLowerCase().includes(model)) {
+                return model.capitalize();
             }
-
-            if (detectedWord[1].includes("0)")) {
-                detectedWord[1] = detectedWord[1].replace("0)", "");
-            }
-
-            return detectedWord[1].trim();
-        }
-
-        if (detectedWord.toLowerCase().includes("fila ")) {
-            return detectedWord;
-        }
-
-        if (detectedWord.toLowerCase() === '061101' || detectedWord.toLowerCase() === 'etel') {
-            return detectedWord;
         }
     },
 
     brandRecognition: function (detectedWord) {
-        if (detectedWord.toLowerCase().includes("krack") || detectedWord.toLowerCase() === "fila" || detectedWord.toLowerCase() === "victoria" || detectedWord.toLowerCase() === "converse" ) {
-            return detectedWord;
+        for (let brand of BRANDS) {
+            if (detectedWord.toLowerCase().includes(brand)) {
+                return brand.capitalize();
+            }
         }
     },
 
     colorRecognition: function (detectedWord) {
-        if (detectedWord.toLowerCase() === "negro" || detectedWord.toLowerCase() === "blanco") {
-            return detectedWord;
-        } else if (detectedWord.toLowerCase().includes("white")) {
-            return "White";
-        } else if(detectedWord.toLowerCase().includes('black')) {
-            return "Black";
+        for (let color of COLORS) {
+            if (detectedWord.toLowerCase().includes(color)) {
+                return color.capitalize();
+            }
         }
     },
 
@@ -54,7 +40,7 @@ module.exports = {
         }
     },
 
-    //get text from image and recognize it, return if we have match
+    //recognize text on given photo/image, might be some random photo also, remember
     awsApiRecognition: function (bitmap) {
         const awsRecognitionData = {};
 
@@ -68,11 +54,9 @@ module.exports = {
                         awsRecognitionData.size = awsRecognitionData.size ? awsRecognitionData.size : module.exports.sizeRecognition(words.DetectedText)
                         awsRecognitionData.brand = awsRecognitionData.brand ? awsRecognitionData.brand : module.exports.brandRecognition(words.DetectedText)
                     }
-
-
                     resolve(awsRecognitionData)
                 }
-
+                console.log("AWS IF ERROR", err);
                 reject()
             });
         })

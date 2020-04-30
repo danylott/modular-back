@@ -7,8 +7,10 @@ module.exports = {
     curlGetByBarCode: async function (barCode) {
 
         return new Promise((resolve, reject) => {
-            request.get(`${apiUrlForBarCode}${barCode}`, (err, response, body) => {
+            request.get(`${process.env.GET_API_URL}${barCode}`, (err, response, body) => {
                 if (!err && response.statusCode === 200) {
+                    resolve(JSON.parse(body));
+                } else if (!err && response.statusCode === 404) {
                     resolve(JSON.parse(body));
                 }
                 reject(err);
@@ -21,7 +23,7 @@ module.exports = {
 
         return new Promise((resolve, reject) => {
             request.post({
-                url: `${apiUrlPostWithBody}`,
+                url: `${process.env.POST_API_URL}`,
                 form: {model: data.model, brand: data.brand, color: data.color, size: data.size}
             }, (err, response, body) => {
                 if (!err && response.statusCode === 200) {

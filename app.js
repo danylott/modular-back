@@ -70,18 +70,21 @@ app.get('/', function (req, res) {
 });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
-    const barCodeImage = req.file.path;
-
-    if (!barCodeImage) {
-        throw new Error("File wasn't sent");
+    if (!req.file) {
+        res.status(404).send({
+            success: false,
+            message: "File wasn't sent"
+        });
+        return;
     }
+
+    const barCodeImage = req.file.path;
 
     //detect if image/photo has a barcode
     const result = JSON.parse(barDecoder.decode(barCodeImage));
+
     const bitmap = fs.readFileSync(req.file.path);
     const data = await awsApiRecognition(bitmap);
-
-    console.log(data);
 
     //if image has no barcode
     if (result.results.length === 0) {
@@ -92,7 +95,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         if (postCurl.statusCode === 404 && postCurl.code === 404) {
             res.status(404).send({
                 success: false,
-                message: "Picture doesn't match requirements."
+                message: "KRACK API {POST} REQUEST COMES WITHOUT DATA."
             });
             return;
         }
@@ -112,6 +115,14 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
     //get request to an api with barcode detected
     const curlGet = await curlGetByBarCode(result.results[0].data);
+
+    if (curlGet.statusCode === 404 && curlGet.code === 404) {
+        res.status(404).send({
+            success: false,
+            message: "KRACK API {GET} REQUEST COMES WITHOUT DATA."
+        });
+        return;
+    }
 
     curlGet.data.localImgSrc = req.file.filename;
 
