@@ -8,9 +8,11 @@ const app = express();
 const path = require('path');
 const barDecoder = require('node-zbardecoder');
 
-
 const {awsApiRecognition} = require("./helpers/recognize");
 const {curlGetByBarCode, curlPostWithParams} = require("./helpers/curlWrapper");
+
+//rabbitMq
+const pushToQueue = require('./helpers/rabbitMqPublish');
 
 //stream of files, so every next will overwrite previous, to avoid mess
 const fileNameForPresentation = '11112222233334444555666777';
@@ -66,6 +68,13 @@ app.get('/recognize', function (req, res) {
 });
 
 app.get('/', function (req, res) {
+    // var imageAsBase64 = fs.readFileSync('./public/uploads/11112222233334444555666777.jpg', 'base64');
+    //
+    // fs.writeFile('helloworld.txt', imageAsBase64, function (err) {
+    //     if (err) return console.log(err);
+    //     console.log('Success written');
+    // });
+
     res.sendFile(path.join(__dirname, './views/welcome.html'));
 });
 
@@ -85,6 +94,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
     const bitmap = fs.readFileSync(req.file.path);
     const data = await awsApiRecognition(bitmap);
+
+    //file to base 64 to send string with rabbitMq
+    data.imageAsBase64 = fs.readFileSync(req.file.path, 'base64');
 
     //if image has no barcode
     if (result.results.length === 0) {
@@ -131,6 +143,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     //this data comes from image via AS recognition api
     global.globalScannedDataFromImage = data;
 
+    await pushToQueue('task_queue', JSON.stringify(globalScannedDataFromImage));
+
+    console.log("response to postman")
     res.status(200).send({
         success: true,
         data: curlGet.data

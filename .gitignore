@@ -3,3 +3,4 @@ node_modules
 package-lock.json
 .env
 public/uploads
+test
