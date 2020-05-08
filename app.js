@@ -145,7 +145,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
     await pushToQueue('task_queue', JSON.stringify(globalScannedDataFromImage));
 
-    console.log("response to postman")
     res.status(200).send({
         success: true,
         data: curlGet.data

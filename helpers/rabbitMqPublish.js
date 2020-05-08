@@ -8,7 +8,7 @@ const publishToQueue = async (queue, message) => {
         await channel.assertQueue(queue, {durable: true});
         await channel.sendToQueue(queue, Buffer.from(message));
 
-        console.info(' [x] Sending message to queue', queue, message);
+        console.info(' [x] Sending message to queue', queue);
 
     } catch (error) {
         // handle error response
