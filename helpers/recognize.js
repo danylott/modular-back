@@ -27,7 +27,6 @@ module.exports = {
     colorRecognition: function (detectedWord) {
         for (let index of detectedWord) {
             if (index.Type === 'LINE') {
-                console.log(index.DetectedText);
                 if (COLORS.includes(index.DetectedText.toLowerCase())) {
                     return index.DetectedText;
                 }

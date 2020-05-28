@@ -37,7 +37,7 @@ module.exports = {
         const hCoordinateModel = cropModelCoordinates.h * imageHeight;
 
         await image.crop(xCoordinateModel, yCoordinateModel, wCoordinateModel, hCoordinateModel);
-        await image.writeAsync('smodel.jpg');
+        await image.writeAsync('public/uploads/smodel.jpg');
     },
 
     cropSize: async function (filePath) {
@@ -51,7 +51,7 @@ module.exports = {
         const hCoordinateSize = cropSizeCoordinates.h * imageHeight
 
         await image.crop(xCoordinateSize, yCoordinateSize, wCoordinateSize, hCoordinateSize);
-        await image.writeAsync('size.jpg');
+        await image.writeAsync('public/uploads/size.jpg');
     },
 
     cropColor: async function (filePath) {
@@ -65,6 +65,6 @@ module.exports = {
         const hCoordinateColor = cropColorCoordinates.h * imageHeight
         image = image.brightness(0.3);
         await image.crop(xCoordinateColor, yCoordinateColor, wCoordinateColor, hCoordinateColor);
-        await image.writeAsync('scolor.jpg');
+        await image.writeAsync('public/uploads/scolor.jpg');
     }
 }

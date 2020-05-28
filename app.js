@@ -122,9 +122,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     await cropSize(req.file.path);
     await cropColor(req.file.path);
 
-    const bitmap1 = fs.readFileSync('scolor.jpg');
-    const bitmap2 = fs.readFileSync('size.jpg');
-    const bitmap3 = fs.readFileSync('smodel.jpg');
+    const bitmap1 = fs.readFileSync('public/uploads/scolor.jpg');
+    const bitmap2 = fs.readFileSync('public/uploads/size.jpg');
+    const bitmap3 = fs.readFileSync('public/uploads/smodel.jpg');
 
     let textFromCroppedImage = [];
 
