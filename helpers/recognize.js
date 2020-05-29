@@ -13,33 +13,48 @@ module.exports = {
     modelRecognition: function (detectedWord) {
 
         for (let index of detectedWord) {
-            if (index.Type === 'LINE') {
-                index.DetectedText = index.DetectedText.replace("NIKE", "").trim();
-                return index.DetectedText;
-            }
-        }
-    },
+            if (index.Type === 'LINE' && index.DetectedText.length > 2) {
 
-    brandRecognition: function (detectedWord) {
-
-    },
-
-    colorRecognition: function (detectedWord) {
-        for (let index of detectedWord) {
-            if (index.Type === 'LINE') {
-                if (COLORS.includes(index.DetectedText.toLowerCase())) {
+                //for nike, nike models always has word {nike} in model
+                if (index.DetectedText.toLowerCase().includes('nike')) {
+                    index.DetectedText = index.DetectedText.replace("NIKE", "").trim();
                     return index.DetectedText;
+                } else {
+                    let model = (/\d+((.|,)\d+)?/.exec(index.DetectedText));
+                    if (model){
+                        return model[0]
+                    }
                 }
 
             }
         }
     },
 
+    colorRecognition: function (detectedWord) {
+        for (let index of detectedWord) {
+            if (index.Type === 'LINE') {
+                index.DetectedText = index.DetectedText.replace(/(^| ).( |$)/, '');
+                if (COLORS.includes(index.DetectedText.toLowerCase())) {
+                    return index.DetectedText;
+                }
+
+                //check for whitespace, example BLACK BLACK
+                if (/\s/.test(index.DetectedText)) {
+                    index.DetectedText = index.DetectedText.split(' ');
+                    if (COLORS.includes(index.DetectedText[0].toLowerCase())) {
+                        return index.DetectedText[0];
+                    }
+                }
+            }
+        }
+    },
+
     sizeRecognition: function (detectedWord) {
         for (let index of detectedWord) {
-            if (index.DetectedText.toLowerCase().startsWith('eur')) {
-                index.DetectedText = index.DetectedText.replace("R", "R ");
-                return index.DetectedText;
+            let size = (/\d+((.|,)\d+)?/.exec(index.DetectedText));
+
+            if (size && size[0] > 30) {
+                return size[0]
             }
         }
 

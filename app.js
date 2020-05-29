@@ -11,7 +11,7 @@ const barDecoder = require('node-zbardecoder');
 const mongoose = require('mongoose');
 
 const {awsApiRecognition, sizeRecognition, colorRecognition, modelRecognition} = require("./helpers/recognize");
-const {cropModel, cropSize, cropColor} = require("./helpers/imageHelper");
+const {cropModel, cropSize, cropColor} = require("./helpers/imageCropHelper");
 const {curlGetByBarCode, curlPostWithParams} = require("./helpers/curlWrapper");
 
 //rabbitMq
@@ -62,20 +62,25 @@ mongoose.connection.on("connected", (err, res) => {
 
 const RecognizeModel = mongoose.model("recognize", {
     name: String,
-    model_coordinate: Object,
-    color_coordinate: Object,
-    size_coordinate: Object,
-    brand_coordinate: Object
+    model: Object,
+    color: Object,
+    size: Object,
+    brand: Object
 });
 
 app.post("/person", async (req, res) => {
-    try {
-        const recognize = new RecognizeModel(req.body);
-        const result = await recognize.save();
-        res.send(result);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+
+    // RecognizeModel.findOne({name: 'nike'}, 'name').then((result, err) => {
+    //     console.log(result)
+    // });
+
+    // try {
+    //     const recognize = new RecognizeModel(req.body);
+    //     const result = await recognize.save();
+    //     res.send(result);
+    // } catch (error) {
+    //     res.status(500).send(error);
+    // }
 });
 
 app.get('/recognize', function (req, res) {
@@ -88,8 +93,8 @@ app.get('/recognize', function (req, res) {
     // typeof globalDataByApiRequest !== 'undefined' ? imageSrc = globalDataByApiRequest.localImgSrc : undefined;
     typeof globalScannedDataFromImage !== 'undefined' ? imageSrc = globalScannedDataFromImage.imageSrc : undefined;
     typeof globalScannedDataFromImage !== 'undefined' ? scannedData = globalScannedDataFromImage : undefined;
-    delete global.globalDataByApiRequest;
-    delete global.globalScannedDataFromImage;
+    // delete global.globalDataByApiRequest;
+    // delete global.globalScannedDataFromImage;
 
     res.render('recognize.ejs', {
         model: model,
@@ -116,11 +121,25 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     //classes = ['krack', 'nike', 'skechers', 'victoria']
-    const imageClass = req.body.class;
+    const imageClassName = req.body.class ? req.body.class.toLowerCase() : null;
 
-    await cropModel(req.file.path);
-    await cropSize(req.file.path);
-    await cropColor(req.file.path);
+    if (!imageClassName) {
+        res.status(404).send({
+            success: false,
+            message: "Class of image wasn't sent!"
+        });
+    }
+
+    let coordinatesData;
+    await RecognizeModel.findOne({name: imageClassName}, {_id: 0, __v: 0}).then((result, err) => {
+        if (!err) {
+            coordinatesData = result;
+        }
+    });
+
+    await cropModel(req.file.path, coordinatesData.model);
+    await cropSize(req.file.path, coordinatesData.size);
+    await cropColor(req.file.path, coordinatesData.color);
 
     const bitmap1 = fs.readFileSync('public/uploads/scolor.jpg');
     const bitmap2 = fs.readFileSync('public/uploads/size.jpg');
@@ -142,7 +161,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         'color': color,
         'size': size,
         'model': model,
-        'brand': imageClass.capitalize(),
+        'brand': coordinatesData.name.capitalize(),
         "imageSrc": req.file.filename
     };
 
@@ -151,7 +170,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         size: size,
         model: model,
         color: color,
-        brand: imageClass.capitalize()
+        brand: coordinatesData.name.capitalize()
     });
 });
 
