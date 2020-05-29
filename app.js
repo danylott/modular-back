@@ -86,15 +86,18 @@ app.post("/person", async (req, res) => {
 app.get('/recognize', function (req, res) {
     let model, color, size, mark, imageSrc, scannedData;
 
-    typeof globalDataByApiRequest !== 'undefined' ? model = globalDataByApiRequest.modelName : undefined;
-    typeof globalDataByApiRequest !== 'undefined' ? color = globalDataByApiRequest.color.name : undefined;
-    typeof globalDataByApiRequest !== 'undefined' ? size = globalDataByApiRequest.size.number : undefined;
-    typeof globalDataByApiRequest !== 'undefined' ? mark = globalDataByApiRequest.brand.name : undefined;
-    // typeof globalDataByApiRequest !== 'undefined' ? imageSrc = globalDataByApiRequest.localImgSrc : undefined;
     typeof globalScannedDataFromImage !== 'undefined' ? imageSrc = globalScannedDataFromImage.imageSrc : undefined;
     typeof globalScannedDataFromImage !== 'undefined' ? scannedData = globalScannedDataFromImage : undefined;
     // delete global.globalDataByApiRequest;
     // delete global.globalScannedDataFromImage;
+
+
+    // { color: 'PEINE ROSE/BLANC',
+    //     size: '38.5',
+    //     model: 'WMNS  AIR HEIGHTS',
+    //     brand: 'Nike',
+    //     imageSrc: '11112222233334444555666777.jpg' }
+
 
     res.render('recognize.ejs', {
         model: model,
@@ -112,6 +115,8 @@ app.get('/', function (req, res) {
 });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
+    delete global.globalScannedDataFromImage;
+
     if (!req.file) {
         res.status(404).send({
             success: false,
@@ -157,13 +162,16 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     let size = await sizeRecognition(textFromCroppedImage[1]);
     let model = await modelRecognition(textFromCroppedImage[2]);
 
-    global.globalScannedDataFromImage = {
-        'color': color,
-        'size': size,
-        'model': model,
-        'brand': coordinatesData.name.capitalize(),
-        "imageSrc": req.file.filename
-    };
+
+    if ((color || size || model) && req.file.filename) {
+        global.globalScannedDataFromImage = {
+            'color': color,
+            'size': size,
+            'model': model,
+            'brand': coordinatesData.name.capitalize(),
+            "imageSrc": req.file.filename
+        };
+    }
 
     res.status(200).send({
         success: true,
