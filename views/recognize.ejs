@@ -81,7 +81,7 @@
                     </div>
                 </div>
             </div>
-            <button class="bottom_btn" style="width: 450px" onclick=location.reload();>OK - SIGUIENTE</button>
+            <button class="bottom_btn" style="width: 450px" onclick="hehe()">OK - SIGUIENTE</button>
         </div>
     </div>
     <div class="copy_author">Copyright © 2020 Krack Recognition</div>
@@ -89,11 +89,20 @@
 
 <script>
 
+    function hehe() {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {};
+        xhr.open('GET', '/');
+        xhr.send();
+        location.reload();
+    }
 
 
-setTimeout(function () {
-    location.reload();
-}, 1000);
+    <% if(typeof imageSrc === 'undefined'){ %>
+    setTimeout(function () {
+        location.reload();
+    }, 5000);
+    <% } %>
 
     function httpGet() {
         window.location.replace("/");

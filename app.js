@@ -68,21 +68,6 @@ const RecognizeModel = mongoose.model("recognize", {
     brand: Object
 });
 
-app.post("/person", async (req, res) => {
-
-    // RecognizeModel.findOne({name: 'nike'}, 'name').then((result, err) => {
-    //     console.log(result)
-    // });
-
-    // try {
-    //     const recognize = new RecognizeModel(req.body);
-    //     const result = await recognize.save();
-    //     res.send(result);
-    // } catch (error) {
-    //     res.status(500).send(error);
-    // }
-});
-
 app.get('/recognize', function (req, res) {
     let model, color, size, mark, imageSrc, scannedData;
 
@@ -90,14 +75,6 @@ app.get('/recognize', function (req, res) {
     typeof globalScannedDataFromImage !== 'undefined' ? scannedData = globalScannedDataFromImage : undefined;
     // delete global.globalDataByApiRequest;
     // delete global.globalScannedDataFromImage;
-
-
-    // { color: 'PEINE ROSE/BLANC',
-    //     size: '38.5',
-    //     model: 'WMNS  AIR HEIGHTS',
-    //     brand: 'Nike',
-    //     imageSrc: '11112222233334444555666777.jpg' }
-
 
     res.render('recognize.ejs', {
         model: model,
@@ -111,11 +88,13 @@ app.get('/recognize', function (req, res) {
 
 app.get('/', function (req, res) {
 
+    delete global.globalScannedDataFromImage;
+
     res.sendFile(path.join(__dirname, './views/welcome.html'));
 });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
-    delete global.globalScannedDataFromImage;
+    // delete global.globalScannedDataFromImage;
 
     if (!req.file) {
         res.status(404).send({
@@ -168,7 +147,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
             'color': color,
             'size': size,
             'model': model,
-            'brand': coordinatesData.name.capitalize(),
+            'brand': coordinatesData.name.toUpperCase(),
             "imageSrc": req.file.filename
         };
     }

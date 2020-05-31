@@ -1,5 +1,4 @@
 const request = require("request");
-const {apiUrlForBarCode, apiUrlPostWithBody} = require('./constants');
 
 module.exports = {
 
