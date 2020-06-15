@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)https://pixlcore.com/demos/webcamjs/demos/hd.html -->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <title>WebcamJS Test Page - HD Capture</title>
+    <style type="text/css">
+      body {
+        font-family: Helvetica, sans-serif;
+      }
+      h2,
+      h3 {
+        margin-top: 0;
+      }
+      form {
+        margin-top: 15px;
+      }
+      form > input {
+        margin-right: 15px;
+      }
+      #results {
+        margin: 20px;
+        padding: 20px;
+        border: 1px solid;
+        background: #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebcamJS Test Page - HD Capture</h1>
+    <h3>
+      Demonstrates 720p HD capture (1280x720), if your camera supports it!
+    </h3>
+
+    <div id="my_camera" style="width: 640px; height: 480px;">
+      <div></div>
+      <video
+        autoplay="autoplay"
+        playsinline="playsinline"
+        style="width: 640px; height: 480px;"
+      ></video>
+    </div>
+
+    <!-- First, include the Webcam.js JavaScript Library -->
+    <script
+      type="text/javascript"
+      src="./WebcamJS Test Page - HD Capture_files/webcam.min.js.download"
+    ></script>
+
+    <!-- Configure a few settings and attach camera -->
+    <script language="JavaScript">
+      Webcam.set({
+        width: 2304,
+        height: 1536,
+        image_format: "jpeg",
+        jpeg_quality: 90,
+        constraints: {
+          width: { ideal: 4096 },
+          height: { ideal: 2160 },
+        },
+      })
+      Webcam.attach("#my_camera")
+    </script>
+
+    <!-- A button for taking snaps -->
+    <form>
+      <input type="button" value="Take HD Snapshot" onclick="take_snapshot()" />
+    </form>
+
+    <!-- Code to handle taking the snapshot and displaying it locally -->
+    <script language="JavaScript">
+      function take_snapshot() {
+        // take snapshot and get image data
+        Webcam.snap(function (data_uri) {
+          // display results in page
+          document.getElementById("results").innerHTML =
+            "<h2>Here is your large image:</h2>" +
+            '<img src="' +
+            data_uri +
+            '"/>'
+        })
+      }
+    </script>
+
+    <div id="results">Your captured image will appear here...</div>
+  </body>
+</html>

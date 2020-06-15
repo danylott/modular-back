@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <title>Capture picture from your webcam</title>
+  </head>
+
+  <body>
+    <div id="camera" style="height: auto; width: auto; text-align: left;"></div>
+
+    <!--FOR THE SNAPSHOT-->
+    <input
+      type="button"
+      value="Take a Snap"
+      id="btPic"
+      onclick="takeSnapShot()"
+    />
+    <p id="snapShot"></p>
+    <img />
+  </body>
+
+  <script>
+    let imageCapture = null
+
+    const constraints = {
+      audio: false,
+      video: {
+        width: { ideal: 4096 },
+        height: { ideal: 2160 },
+      },
+    }
+    navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then(gotMedia)
+      .catch((error) => console.error("getUserMedia() error:", error))
+
+    async function gotMedia(mediaStream) {
+      console.log(mediaStream.getTracks())
+      const mediaStreamTrack = mediaStream.getVideoTracks()[0]
+      await mediaStreamTrack.applyConstraints({ width: 640, height: 360 })
+      console.log(mediaStreamTrack.getCapabilities())
+      imageCapture = new ImageCapture(mediaStreamTrack)
+      const cp = await imageCapture.getPhotoCapabilities()
+      console.log(cp)
+    }
+
+    function takeSnapShot() {
+      const img = document.querySelector("img")
+      // ...
+      imageCapture
+        .takePhoto()
+        .then((blob) => {
+          img.src = URL.createObjectURL(blob)
+          img.onload = () => {
+            URL.revokeObjectURL(this.src)
+          }
+        })
+        .catch((error) => console.error("takePhoto() error:", error))
+    }
+  </script>
+</html>
