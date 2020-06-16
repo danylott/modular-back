@@ -13,7 +13,7 @@ const mutations = gql`
   type FindResponse {
     found: Boolean!
     class: Class
-    make: String
+    score: Float
     color: String
     size: String
     model: String
@@ -60,12 +60,17 @@ const resolvers = {
           .on("finish", resolve)
           .on("error", reject)
       )
-      const { stdout, stderr } = await exec(
-        "cd /Users/pianist/development/krack-python/ && python3 predict.py --input /Users/pianist/development/krack-back-end/images/last.jpg"
+      const curpath = process.cwd()
+      const { stdout } = await exec(
+        `cd ${process.env.PYTHON_PATH} && python3 predict.py --input ${curpath}/images/last.jpg --save-crop ${curpath}/images/crop.jpg`
       )
-      console.log("stdout:", stdout)
-      console.log("stderr:", stderr)
-      return { found: false, make: filename }
+      if (stdout === "not_found") {
+        return { found: false }
+      } else {
+        const [className, score] = stdout.split(" ")
+        console.log(className)
+        return { found: true, score }
+      }
     },
   },
 }

@@ -1,3 +1,4 @@
+require("dotenv").config()
 const { ApolloServer, gql } = require("apollo-server")
 const mongoose = require("mongoose")
 
@@ -8,10 +9,13 @@ const server = new ApolloServer({
   typeDefs: [classDefs, queries, mutations],
   resolvers,
   context: async () => ({
-    db: await mongoose.connect("mongodb://localhost:27017/krack", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }),
+    db: await mongoose.connect(
+      `mongodb://localhost:27017/${process.env.MONGO_DB}`,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
+    ),
   }),
 })
 
