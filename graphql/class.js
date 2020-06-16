@@ -1,6 +1,8 @@
 const { gql } = require("apollo-server")
 const { Class } = require("../models/class")
 const { createWriteStream } = require("fs")
+const util = require("util")
+const exec = util.promisify(require("child_process").exec)
 
 const queries = gql`
   type Query {
@@ -49,15 +51,20 @@ const resolvers = {
       return cl.save()
     },
     findOnImage: async (parent, { file }) => {
-      const { createReadStream, filename, mimetype, encoding } = await file
+      const { createReadStream, filename, mimetype } = await file
       const stream = createReadStream()
-      const path = `images/test.jpg`
+      const path = `images/last.jpg`
       await new Promise((resolve, reject) =>
         stream
           .pipe(createWriteStream(path))
           .on("finish", resolve)
           .on("error", reject)
       )
+      const { stdout, stderr } = await exec(
+        "cd /Users/pianist/development/krack-python/ && python3 predict.py --input /Users/pianist/development/krack-back-end/images/last.jpg"
+      )
+      console.log("stdout:", stdout)
+      console.log("stderr:", stderr)
       return { found: false, make: filename }
     },
   },
