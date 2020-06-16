@@ -63,9 +63,11 @@ const resolvers = {
     },
   },
 }
+const { classDefs } = require("./models/class")
+const { queries, mutations, resolvers } = require("./graphql/class")
 
 const server = new ApolloServer({
-  typeDefs,
+  typeDefs: [classDefs, queries, mutations],
   resolvers,
   context: async () => ({
     db: await mongoose.connect("mongodb://localhost:27017/krack", {
