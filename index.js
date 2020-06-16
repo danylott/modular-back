@@ -13,10 +13,10 @@ const typeDefs = gql`
 
   type ClassMarkup {
     field: String
-    x: Int
-    y: Int
-    w: Int
-    h: Int
+    x: Float
+    y: Float
+    w: Float
+    h: Float
   }
 
   type Query {
@@ -25,10 +25,10 @@ const typeDefs = gql`
 
   input ClassMarkupInput {
     field: String
-    x: Int
-    y: Int
-    w: Int
-    h: Int
+    x: Float
+    y: Float
+    w: Float
+    h: Float
   }
 
   type Mutation {
