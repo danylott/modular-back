@@ -19,18 +19,18 @@ module.exports = {
 
     type ClassMarkup {
       field: String
-      x: Int
-      y: Int
-      w: Int
-      h: Int
+      x: Float
+      y: Float
+      w: Float
+      h: Float
     }
 
     input ClassMarkupInput {
       field: String
-      x: Int
-      y: Int
-      w: Int
-      h: Int
+      x: Float
+      y: Float
+      w: Float
+      h: Float
     }
   `,
 }

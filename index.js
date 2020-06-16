@@ -1,5 +1,6 @@
 const { ApolloServer, gql } = require("apollo-server")
 const mongoose = require("mongoose")
+
 const { classDefs } = require("./models/class")
 const { queries, mutations, resolvers } = require("./graphql/class")
 
