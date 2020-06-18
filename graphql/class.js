@@ -3,6 +3,9 @@ const { Class } = require("../models/class")
 const { createWriteStream } = require("fs")
 const util = require("util")
 const exec = util.promisify(require("child_process").exec)
+const { cropImageByCoordinates } = require("../helpers/imageCropHelper")
+const { rekognitionDetectText, textFromMap } = require("../helpers/recognize")
+const Jimp = require("jimp")
 
 const queries = gql`
   type Query {
@@ -21,12 +24,7 @@ const mutations = gql`
 
   type Mutation {
     createClass(name: String, make: String): Class
-    updateClass(
-      name: String
-      make: String
-      status: String
-      markup: [ClassMarkupInput]
-    ): Class
+    updateClass(name: String, make: String, status: String, markup: [ClassMarkupInput]): Class
     findOnImage(file: Upload!): FindResponse
   }
 `
@@ -53,24 +51,38 @@ const resolvers = {
     findOnImage: async (parent, { file }) => {
       const { createReadStream, filename, mimetype } = await file
       const stream = createReadStream()
-      const path = `images/last.jpg`
+      const path = `images/demo.jpg`
       await new Promise((resolve, reject) =>
-        stream
-          .pipe(createWriteStream(path))
-          .on("finish", resolve)
-          .on("error", reject)
+        stream.pipe(createWriteStream(path)).on("finish", resolve).on("error", reject)
       )
       const curpath = process.cwd()
       const { stdout } = await exec(
-        `cd ${process.env.PYTHON_PATH} && python3 predict.py --input ${curpath}/images/last.jpg --save-crop ${curpath}/images/crop.jpg`
+        `cd ${process.env.PYTHON_PATH} && python3 predict.py --input ${curpath}/images/demo.jpg --save-crop ${curpath}/images/crop.jpg`
       )
-      if (stdout === "not_found") {
+      if (stdout.includes("not_found")) {
+        console.error("sticker not found")
         return { found: false }
-      } else {
-        const [className, score] = stdout.split(" ")
-        console.log(className)
+      }
+
+      const [className, score] = stdout.split(" ")
+      console.log("found sticker: ", className)
+      const clss = await Class.findOne({ name: className })
+      if (!clss) {
+        console.error("class not in DB")
         return { found: true, score }
       }
+
+      let crop = await Jimp.read("./images/crop.jpg")
+      const fieldResults = {}
+      for (const field of clss.markup) {
+        let buffer = await cropImageByCoordinates(field, crop, "./images/crop.jpg")
+        const map = await rekognitionDetectText(buffer)
+        const text = textFromMap(map)
+        fieldResults[field.field.toLowerCase()] = text
+      }
+      crop.write("./images/marked.jpg")
+      console.log(fieldResults)
+      return { found: true, score, class: clss, ...fieldResults }
     },
   },
 }

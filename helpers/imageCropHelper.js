@@ -1,30 +1,23 @@
-const Jimp = require('jimp');
+const Jimp = require("jimp")
 
-async function cropImageByCoordinates(coordinates, filePath, saveImageName) {
-    let image = await Jimp.read(filePath);
-
-    const xCoordinate = coordinates.x * image.bitmap.width;
-    const yCoordinate = coordinates.y * image.bitmap.height;
-    const wCoordinate = coordinates.width * image.bitmap.width;
-    const hCoordinate = coordinates.height * image.bitmap.height;
-
-    image = image.brightness(0.3);
-    await image.crop(xCoordinate, yCoordinate, wCoordinate, hCoordinate);
-    await image.writeAsync(`public/uploads/${saveImageName}.jpg`);
+function drawLine(x, y, offset) {
+  this.bitmap.data.writeUInt32BE(0x1fff5aff, offset, true)
 }
 
-//calculation was done manually here https://www.pictools.net/crop/
-//crop from image model, color,size, brand, for very first time use site above to calculate coordinates
 module.exports = {
-    cropModel: async function (filePath, coordinates) {
-        await cropImageByCoordinates(coordinates, filePath, 'smodel');
-    },
+  cropImageByCoordinates: async function (coordinates, markedImage, originalPath) {
+    const image = await Jimp.read(originalPath)
+    const x = coordinates.x * image.bitmap.width
+    const y = coordinates.y * image.bitmap.height
+    const w = coordinates.w * image.bitmap.width
+    const h = coordinates.h * image.bitmap.height
 
-    cropSize: async function (filePath, coordinates) {
-        await cropImageByCoordinates(coordinates, filePath, 'size');
-    },
-
-    cropColor: async function (filePath, coordinates) {
-        await cropImageByCoordinates(coordinates, filePath, 'scolor');
-    }
+    markedImage.scan(x, y, w, 1, drawLine)
+    markedImage.scan(x, y, 1, h, drawLine)
+    markedImage.scan(x, y + h, w, 1, drawLine)
+    markedImage.scan(x + w, y, 1, h, drawLine)
+    //image = image.brightness(0.3);
+    image.crop(x, y, w, h)
+    return await image.getBufferAsync(Jimp.MIME_JPEG)
+  },
 }
