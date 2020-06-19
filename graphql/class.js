@@ -67,12 +67,13 @@ const resolvers = {
       const [className, score] = stdout.split(" ")
       console.log("found sticker: ", className)
       const clss = await Class.findOne({ name: className })
-      if (!clss) {
-        console.error("class not in DB")
-        return { found: true, score }
-      }
 
       let crop = await Jimp.read("./images/crop.jpg")
+      if (!clss) {
+        console.error("class not in DB")
+        crop.write("./images/marked.jpg")
+        return { found: true, score, model: className }
+      }
       const fieldResults = {}
       for (const field of clss.markup) {
         let buffer = await cropImageByCoordinates(field, crop, "./images/crop.jpg")
