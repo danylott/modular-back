@@ -78,7 +78,7 @@ const resolvers = {
       for (const field of clss.markup) {
         let buffer = await cropImageByCoordinates(field, crop, "./images/crop.jpg")
         const map = await rekognitionDetectText(buffer)
-        const text = textFromMap(map)
+        const text = textFromMap(map, field.field)
         fieldResults[field.field.toLowerCase()] = text
       }
       crop.write("./images/marked.jpg")

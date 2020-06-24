@@ -13,21 +13,17 @@ async function test2() {
     useUnifiedTopology: true,
   })
 
+  const clss = await Class.findOne({ name: "newbalance" })
   let crop = await Jimp.read("./images/crop.jpg")
-  // function iterator(x, y, offset) {
-  //   this.bitmap.data.writeUInt32BE(0x00000088, offset, true)
-  // }
-  // crop.scan(236, 100, 240, 1, iterator)
-  // crop.write("./images/crop2.jpg")
-
-  const clss = await Class.findOne({ name: "mare" })
+  const fieldResults = {}
   for (const field of clss.markup) {
-    console.log(field.field)
     let buffer = await cropImageByCoordinates(field, crop, "./images/crop.jpg")
     const map = await rekognitionDetectText(buffer)
-    const text = textFromMap(map)
-    console.log(text)
+    console.log(field.field, map)
+    const text = textFromMap(map, field.field)
+    fieldResults[field.field.toLowerCase()] = text
   }
+  console.log(fieldResults)
   crop.write("./images/marked.jpg")
 
   mongoose.connection.close()
