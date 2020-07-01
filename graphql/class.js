@@ -49,6 +49,7 @@ const resolvers = {
       return cl.save()
     },
     findOnImage: async (parent, { file }) => {
+      const start = new Date()
       const { createReadStream, filename, mimetype } = await file
       const stream = createReadStream()
       const path = `images/demo.jpg`
@@ -59,6 +60,8 @@ const resolvers = {
       const { stdout } = await exec(
         `cd ${process.env.PYTHON_PATH} && python3 predict.py --input ${curpath}/images/demo.jpg --save-crop ${curpath}/images/crop.jpg`
       )
+      console.info("recognition return: %dms", new Date() - start)
+
       if (stdout.includes("not_found")) {
         console.error("sticker not found")
         return { found: false }
@@ -69,17 +72,19 @@ const resolvers = {
       const clss = await Class.findOne({ name: className })
 
       let crop = await Jimp.read("./images/crop.jpg")
-      if (!clss) {
-        console.error("class not in DB")
+      if (!clss || !clss.markup || !clss.markup.isArray()) {
+        console.error(clss ? "markup is not defined for class" : "class not in DB")
         crop.write("./images/marked.jpg")
         return { found: true, score, model: className }
       }
+
       const fieldResults = {}
       for (const field of clss.markup) {
         let buffer = await cropImageByCoordinates(field, crop, "./images/crop.jpg")
         const map = await rekognitionDetectText(buffer)
         const text = textFromMap(map, field.field)
         fieldResults[field.field.toLowerCase()] = text
+        console.info(`get text from API for ${field.field}: %dms`, new Date() - start)
       }
       crop.write("./images/marked.jpg")
       console.log(fieldResults)
