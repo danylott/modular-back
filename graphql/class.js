@@ -72,7 +72,7 @@ const resolvers = {
       const clss = await Class.findOne({ name: className })
 
       let crop = await Jimp.read("./images/crop.jpg")
-      if (!clss || !clss.markup || !clss.markup.isArray()) {
+      if (!clss || !clss.markup) {
         console.error(clss ? "markup is not defined for class" : "class not in DB")
         crop.write("./images/marked.jpg")
         return { found: true, score, model: className }
