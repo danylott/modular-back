@@ -11,6 +11,7 @@ module.exports = {
   classDefs: gql`
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
     type Class {
+      _id: String
       name: String!
       make: String
       status: String
