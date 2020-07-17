@@ -32,6 +32,7 @@ async function handleSingleImage(buffer) {
       const { _id: recognitionId, barcode } = await Recognition.create({
         positionId,
         barcode: barcodes[0].barcodeText,
+        barcodeType: barcodes[0].barcodeFormatString,
       })
       rabbitMq.publish("recognitions", {
         positionId,
@@ -63,6 +64,7 @@ async function handleSingleImage(buffer) {
       positionId,
       recognitionId: recognition._id,
       barcode: null,
+      barcodeType: null,
       image: buffer ? buffer.toString("base64") : null,
       brand: res.class.make,
       model: res.model,
