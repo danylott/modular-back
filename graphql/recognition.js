@@ -1,10 +1,27 @@
-const { gql } = require('apollo-server');
 const { Recognition } = require('../models/recognition');
 
-const mutations = gql`
-  type Mutation {
-    getLastRecognition(createdAfterDate: Int!): [Class]
+const types = `
+  type RecognizedTexts {
+    model: String
+    size: String
+    color: String
   }
+  
+  type Recognition {
+    _id: String
+    positionId: Int
+    classId: String
+    barcode: String
+    image: String
+    score: Float
+    recognized: RecognizedTexts
+    createdAt: String
+    updatedAt: String
+  }
+`;
+
+const mutations = `
+  getLastRecognition(createdAfterDate: Int): Recognition
 `;
 
 const resolvers = {
@@ -14,4 +31,4 @@ const resolvers = {
   },
 };
 
-module.exports = { mutations, resolvers };
+module.exports = { types, mutations, resolvers };

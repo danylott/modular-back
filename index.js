@@ -2,10 +2,7 @@ require('dotenv').config();
 const { ApolloServer } = require('apollo-server');
 const mongoose = require('mongoose');
 
-const { classDefs } = require('./models/class');
-const classTypeDefs = require('./graphql/class');
-const recognitionTypeDefs = require('./graphql/recognition');
-
+const { typeDefs, resolvers } = require('./graphql');
 const rabbitMq = require('./helpers/rabbitMq');
 
 mongoose
@@ -17,16 +14,8 @@ mongoose
     rabbitMq.init(process.env.RABBIT_MQ_URL).then(() => rabbitMq.startAll());
 
     const server = new ApolloServer({
-      typeDefs: [
-        classDefs,
-        classTypeDefs.queries,
-        classTypeDefs.mutations,
-        recognitionTypeDefs.mutations,
-      ],
-      resolvers: {
-        ...classTypeDefs.resolvers,
-        ...recognitionTypeDefs.resolvers,
-      },
+      typeDefs,
+      resolvers,
     });
     server.listen().then(({ url }) => {
       console.log(`🚀  Server ready at ${url}`);

@@ -1,14 +1,8 @@
-const { gql } = require('apollo-server');
 const { createWriteStream } = require('fs');
 const { processImage } = require('../helpers/recognize');
 const { Class } = require('../models/class');
 
-const queries = gql`
-  type Query {
-    classes: [Class]
-  }
-`;
-const mutations = gql`
+const types = `
   type FindResponse {
     found: Boolean!
     class: Class
@@ -18,17 +12,44 @@ const mutations = gql`
     model: String
   }
 
-  type Mutation {
-    createClass(name: String, make: String): Class
-    deleteClass(id: String): Boolean
-    updateClass(
-      name: String
-      make: String
-      status: String
-      markup: [ClassMarkupInput]
-    ): Class
-    findOnImage(file: Upload!): FindResponse
+  type ClassMarkup {
+    field: String
+    x: Float
+    y: Float
+    w: Float
+    h: Float
   }
+
+  input ClassMarkupInput {
+    field: String
+    x: Float
+    y: Float
+    w: Float
+    h: Float
+  }
+  
+  type Class {
+    _id: String
+    name: String!
+    make: String
+    status: String
+    markup: [ClassMarkup]
+  }
+`;
+const queries = `
+  classes: [Class]
+`;
+
+const mutations = `
+  createClass(name: String, make: String): Class
+  deleteClass(id: String): Boolean
+  updateClass(
+    name: String
+    make: String
+    status: String
+    markup: [ClassMarkupInput]
+  ): Class
+  findOnImage(file: Upload!): FindResponse
 `;
 
 const resolvers = {
@@ -69,4 +90,4 @@ const resolvers = {
   },
 };
 
-module.exports = { queries, mutations, resolvers };
+module.exports = { types, queries, mutations, resolvers };
