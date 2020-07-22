@@ -10,7 +10,7 @@ const types = `
   type Recognition {
     _id: String
     positionId: Int
-    classId: String
+    classId: Class
     barcode: String
     image: String
     score: Float
@@ -27,7 +27,9 @@ const mutations = `
 const resolvers = {
   Mutation: {
     lastRecognition: (_, { createdAfterDate }) =>
-      Recognition.findOne({ createdAt: { $gt: new Date(createdAfterDate) } }),
+      Recognition.findOne({
+        createdAt: { $gt: new Date(createdAfterDate) },
+      }).populate('classId'),
   },
 };
 
