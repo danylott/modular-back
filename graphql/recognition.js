@@ -6,11 +6,17 @@ const types = `
     size: String
     color: String
   }
+
+  type RecognizedClass {
+    name: String!
+    make: String
+    status: String
+  }
   
   type Recognition {
     _id: String
     positionId: Int
-    classId: Class
+    classId: RecognizedClass
     barcode: String
     image: String
     score: Float
