@@ -58,7 +58,7 @@ const processImage = async ({ filterClasses }) => {
 
   const crop = await Jimp.read('./images/crop.jpg');
   if (!clss || !clss.markup) {
-    console.error(clss ? 'markup is not defined for class' : 'class not in DB');
+    console.info(clss ? 'markup is not defined for class' : 'class not in DB');
     crop.write('./images/marked.jpg');
     return { found: true, score, model: className };
   }

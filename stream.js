@@ -58,7 +58,7 @@ async function handleSingleImage(buffer) {
     filterClasses: session ? session.classes : null,
   });
 
-  if (res.found) {
+  if (!!res.found && !!res.class) {
     const recognition = await Recognition.create({
       positionId,
       classId: res.class._id,
