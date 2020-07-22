@@ -3,7 +3,7 @@ const { Recognition } = require('../models/recognition');
 
 const mutations = gql`
   type Mutation {
-    getLastRecognition(createdAfterDate: String!): [Class]
+    getLastRecognition(createdAfterDate: Int!): [Class]
   }
 `;
 
