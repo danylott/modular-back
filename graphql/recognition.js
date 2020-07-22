@@ -21,12 +21,12 @@ const types = `
 `;
 
 const mutations = `
-  getLastRecognition(createdAfterDate: Int): Recognition
+  lastRecognition(createdAfterDate: String): Recognition
 `;
 
 const resolvers = {
   Mutation: {
-    getLastRecognition: async (_, { createdAfterDate }) =>
+    lastRecognition: (_, { createdAfterDate }) =>
       Recognition.findOne({ createdAt: { $gt: new Date(createdAfterDate) } }),
   },
 };
