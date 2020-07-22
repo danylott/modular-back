@@ -1,11 +1,11 @@
-const mongoose = require("mongoose")
-const { gql } = require("apollo-server")
+const mongoose = require('mongoose');
+const { gql } = require('apollo-server');
 
 module.exports = {
-  Class: mongoose.model("class", {
+  Class: mongoose.model('class', {
     name: { type: String, unique: true },
     make: String,
-    status: { type: String, default: "collecting" },
+    status: { type: String, default: 'collecting' },
     markup: mongoose.Schema.Types.Mixed,
   }),
   classDefs: gql`
@@ -34,4 +34,4 @@ module.exports = {
       h: Float
     }
   `,
-}
+};

@@ -1,7 +1,7 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose');
 
 module.exports = {
-  Session: mongoose.model("session", {
+  Session: mongoose.model('session', {
     positionId: Number,
     supplier: String,
     brands: [String],
@@ -10,4 +10,4 @@ module.exports = {
     createdAt: { type: Date, default: Date.now },
     updatedAt: Date,
   }),
-}
+};

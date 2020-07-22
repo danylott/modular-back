@@ -1,7 +1,7 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose');
 
 module.exports = {
-  Recognition: mongoose.model("recognition", {
+  Recognition: mongoose.model('recognition', {
     positionId: Number,
     classId: mongoose.Schema.Types.ObjectId,
     barcode: String,
@@ -12,4 +12,4 @@ module.exports = {
     createdAt: { type: Date, default: Date.now },
     updatedAt: Date,
   }),
-}
+};
