@@ -59,7 +59,7 @@ const processImage = async ({ filterClasses }) => {
   const crop = await Jimp.read('./images/crop.jpg');
   if (!clss || !clss.markup) {
     console.info(clss ? 'markup is not defined for class' : 'class not in DB');
-    crop.write('./images/marked.jpg');
+    await crop.writeAsync('./images/marked.jpg');
     return { found: true, score, model: className };
   }
 
@@ -78,7 +78,7 @@ const processImage = async ({ filterClasses }) => {
       new Date() - start
     );
   }
-  crop.write('./images/marked.jpg');
+  await crop.writeAsync('./images/marked.jpg');
   console.log(fieldResults);
   return { found: true, score, class: clss, ...fieldResults };
 };

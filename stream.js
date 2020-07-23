@@ -19,35 +19,36 @@ function sleep(s) {
 let busy = false;
 let reader;
 
+// eslint-disable-next-line complexity
 async function handleSingleImage(buffer) {
   busy = true;
 
   const positionId = argv.position;
   console.info(`start processing frame for position ${positionId}`);
 
-  // if (buffer) {
-  //   const barcodes = await reader.decode(buffer);
-  //   if (barcodes.length > 0) {
-  //     console.log(
-  //       `${barcodes[0].barcodeFormatString} found: ${barcodes[0].barcodeText}`
-  //     );
-  //
-  //     const { _id: recognitionId, barcode } = await Recognition.create({
-  //       positionId,
-  //       barcode: barcodes[0].barcodeText,
-  //       barcodeType: barcodes[0].barcodeFormatString,
-  //     });
-  //     rabbitMq.publish('recognitions', {
-  //       positionId,
-  //       recognitionId,
-  //       barcode,
-  //     });
-  //
-  //     await sleep(10);
-  //     busy = false;
-  //     return;
-  //   }
-  // }
+  if (buffer) {
+    const barcodes = await reader.decode(buffer);
+    if (barcodes.length > 0) {
+      console.log(
+        `${barcodes[0].barcodeFormatString} found: ${barcodes[0].barcodeText}`
+      );
+
+      const { _id: recognitionId, barcode } = await Recognition.create({
+        positionId,
+        barcode: barcodes[0].barcodeText,
+        barcodeType: barcodes[0].barcodeFormatString,
+      });
+      rabbitMq.publish('recognitions', {
+        positionId,
+        recognitionId,
+        barcode,
+      });
+
+      await sleep(10);
+      busy = false;
+      return;
+    }
+  }
 
   if (buffer) await writeFileAsync('images/input.jpg', buffer, () => {});
 
