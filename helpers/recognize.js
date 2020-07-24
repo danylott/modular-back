@@ -44,17 +44,20 @@ const processImage = async ({ filterClasses }) => {
     );
     index += 1;
 
-    const { dat } = await axios.post(
+    const { data: rekognizedData } = await axios.post(
       `${process.env.PYTHON_API}rekognize-text/`,
       {
         input: `${curpath}/images/${path}`,
       }
     );
-    console.log(`get result from python recognition for ${field.field}: `, dat);
+    console.log(
+      `get result from python recognition for ${field.field}: `,
+      rekognizedData
+    );
     //   const map = await recognitionDetectText(buffer);
     //   const text = textFromMap(map, field.field);
-    console.log('data.text', dat.text);
-    fieldResults[field.field.toLowerCase()] = dat.text;
+    console.log('data.text', rekognizedData.text);
+    fieldResults[field.field.toLowerCase()] = rekognizedData.text;
   }
   await crop.writeAsync('./images/marked.jpg');
   // console.log(fieldResults);
