@@ -63,6 +63,7 @@ const processImage = async ({ filterClasses }) => {
       './images/crop.jpg',
       index
     );
+    index += 1;
 
     const { data:rekognizeData } = await axios.post(`${process.env.PYTHON_API}rekognize-text/`, {
       input: `${curpath}/images/${image_name}`,
