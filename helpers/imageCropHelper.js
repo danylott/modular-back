@@ -5,7 +5,7 @@ function drawLine(x, y, offset) {
 }
 
 module.exports = {
-  async cropImageByCoordinates(coordinates, markedImage, originalPath) {
+  async cropImageByCoordinates(coordinates, markedImage, originalPath, index) {
     const image = await Jimp.read(originalPath);
 
     const x = coordinates.x * image.bitmap.width;
@@ -22,9 +22,10 @@ module.exports = {
     markedImage.scan(x + w, y, 1, h, drawLine);
     image.crop(x, y, w, h);
 
-    // image.write(`./images/${coordinates.field}.jpg`)
-    const croppedImage = await image.getBufferAsync(Jimp.MIME_JPEG);
+    let file_name = `${index}.jpg`;
+    image.write(`./images/${index}.jpg`);
+    // const croppedImage = await image.getBufferAsync(Jimp.MIME_JPEG);
 
-    return croppedImage;
+    return file_name;
   },
 };
