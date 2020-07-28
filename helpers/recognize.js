@@ -4,6 +4,28 @@ const axios = require('axios');
 const { cropImageByCoordinates } = require('./imageCropHelper');
 const { Class } = require('../models/class');
 
+const cropStickerFromImage = async ({ filterClasses }) => {
+  const start = new Date();
+  const curpath = process.cwd();
+
+  const { data } = await axios.post(process.env.PYTHON_API, {
+    input: `${curpath}/images/input.jpg`,
+    save_crop: `${curpath}/images/crop.jpg`,
+    filter_classes: filterClasses,
+  });
+
+  console.info('recognition returns: %dms', new Date() - start);
+
+  if (!data.found) {
+    console.log(data.message);
+    return { success: false };
+  }
+
+  const { className, score } = data;
+  console.log('found sticker: ', className);
+  return { success: true };
+};
+
 const processImage = async ({ filterClasses }) => {
   const start = new Date();
   const curpath = process.cwd();
@@ -57,4 +79,4 @@ const processImage = async ({ filterClasses }) => {
   return { found: true, score, class: clss, ...fieldResults };
 };
 
-module.exports = { processImage };
+module.exports = { processImage, cropStickerFromImage };
