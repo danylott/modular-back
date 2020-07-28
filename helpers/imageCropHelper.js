@@ -23,7 +23,7 @@ module.exports = {
     image.crop(x, y, w, h);
 
     let file_name = `${index}.jpg`;
-    image.write(`./images/${index}.jpg`);
+    await image.writeAsync(`./images/${file_name}`);
     // const croppedImage = await image.getBufferAsync(Jimp.MIME_JPEG);
 
     return file_name;
