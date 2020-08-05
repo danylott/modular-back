@@ -4,11 +4,33 @@ const axios = require('axios');
 const { cropImageByCoordinates } = require('./imageCropHelper');
 const { Class } = require('../models/class');
 
+const cropStickerFromImage = async ({ filterClasses }) => {
+  const start = new Date();
+  const curpath = process.cwd();
+
+  const { data } = await axios.post(process.env.PYTHON_API, {
+    input: `${curpath}/images/input.jpg`,
+    save_crop: `${curpath}/images/crop.jpg`,
+    filter_classes: filterClasses,
+  });
+
+  console.info('recognition returns: %dms', new Date() - start);
+
+  if (!data.found) {
+    console.log(data.message);
+    return { success: false };
+  }
+
+  const { className, score } = data;
+  console.log(score);
+  console.log('found sticker: ', className);
+  return { success: true };
+};
+
 const processImage = async ({ filterClasses }) => {
   const start = new Date();
   const curpath = process.cwd();
 
-  console.info('sent data to Python API');
   const { data } = await axios.post(process.env.PYTHON_API, {
     input: `${curpath}/images/input.jpg`,
     save_crop: `${curpath}/images/crop.jpg`,
@@ -33,10 +55,10 @@ const processImage = async ({ filterClasses }) => {
     return { found: true, score, model: className };
   }
 
-  const fieldResults = {};
   let index = 0;
+  const fieldResults = {};
   for (const field of clss.markup) {
-    const path = await cropImageByCoordinates(
+    const imageName = await cropImageByCoordinates(
       field,
       crop,
       './images/crop.jpg',
@@ -44,24 +66,22 @@ const processImage = async ({ filterClasses }) => {
     );
     index += 1;
 
-    const { data: rekognizedData } = await axios.post(
+    const { data: rekognizeData } = await axios.post(
       `${process.env.PYTHON_API}rekognize-text/`,
       {
-        input: `${curpath}/images/${path}`,
+        input: `${curpath}/images/${imageName}`,
       }
     );
-    console.log(
-      `get result from python recognition for ${field.field}: `,
-      rekognizedData
+
+    fieldResults[field.field.toLowerCase()] = rekognizeData.text;
+    console.info(
+      `get text from python API for ${field.field}: %dms`,
+      new Date() - start
     );
-    //   const map = await recognitionDetectText(buffer);
-    //   const text = textFromMap(map, field.field);
-    console.log('data.text', rekognizedData.text);
-    fieldResults[field.field.toLowerCase()] = rekognizedData.text;
   }
   await crop.writeAsync('./images/marked.jpg');
-  // console.log(fieldResults);
+  console.log(fieldResults);
   return { found: true, score, class: clss, ...fieldResults };
 };
 
-module.exports = { processImage };
+module.exports = { processImage, cropStickerFromImage };
