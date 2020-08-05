@@ -1,9 +1,10 @@
 const { createWriteStream } = require('fs');
 const { processImage, cropStickerFromImage } = require('../helpers/recognize');
+const { startTrainingClasses } = require('../helpers/train');
 const { Class } = require('../models/class');
 
 const types = `
-  type CropResponse {
+  type SuccessResponse {
     success: Boolean!
   }
 
@@ -54,7 +55,8 @@ const mutations = `
     markup: [ClassMarkupInput]
   ): Class
   findOnImage(file: Upload!): FindResponse
-  cropImage(file: Upload!): CropResponse
+  cropImage(file: Upload!): SuccessResponse
+  trainClasses(classes: [String]!): SuccessResponse
 `;
 
 const resolvers = {
@@ -105,6 +107,10 @@ const resolvers = {
       );
       return cropStickerFromImage({ filterClasses: null });
     },
+    trainClasses: async (_, {classes}) => {
+      console.log('Train on: ', classes);
+      return startTrainingClasses({classes});
+    }
   },
 };
 
