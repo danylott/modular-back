@@ -13,6 +13,18 @@ const startTrainingClasses = async (classes) => {
 
     console.info('recognition returns: %dms', new Date() - start);
 
+    const { exec } = require('child_process');
+    console.info('restart flask-api');
+    exec(process.env.TERMINAL_COMMAND_TO_RESTART_PYTHON_API, (err, stdout, stderr) => {
+        if (err) {
+            сonsole.error(err)
+            return {success: false}
+        } else {
+            console.log(`stdout: ${stdout}`);
+            console.log(`stderr: ${stderr}`);
+        }
+        });
+
     if (!data) {
         return {success: false}
     } else {
