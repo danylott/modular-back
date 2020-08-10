@@ -22,6 +22,7 @@ const cropStickerFromImage = async ({ filterClasses }) => {
   }
 
   const { className, score } = data;
+  console.log(score);
   console.log('found sticker: ', className);
   return { success: true };
 };
@@ -57,7 +58,7 @@ const processImage = async ({ filterClasses }) => {
   let index = 0;
   const fieldResults = {};
   for (const field of clss.markup) {
-    const image_name = await cropImageByCoordinates(
+    const imageName = await cropImageByCoordinates(
       field,
       crop,
       './images/crop.jpg',
@@ -65,9 +66,12 @@ const processImage = async ({ filterClasses }) => {
     );
     index += 1;
 
-    const { data:rekognizeData } = await axios.post(`${process.env.PYTHON_API}rekognize-text/`, {
-      input: `${curpath}/images/${image_name}`,
-    });
+    const { data: rekognizeData } = await axios.post(
+      `${process.env.PYTHON_API}rekognize-text/`,
+      {
+        input: `${curpath}/images/${imageName}`,
+      }
+    );
 
     fieldResults[field.field.toLowerCase()] = rekognizeData.text;
     console.info(

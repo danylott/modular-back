@@ -1,6 +1,7 @@
 const Jimp = require('jimp');
 const fs = require('fs');
 const { promisify } = require('util');
+
 const writeFileAsync = promisify(fs.writeFile);
 
 function drawLine(x, y, offset) {
@@ -25,11 +26,12 @@ module.exports = {
     markedImage.scan(x + w, y, 1, h, drawLine);
     image.crop(x, y, w, h);
 
-    let file_name = `${index}.jpg`;
-    await image.writeAsync(`images/${file_name}`);
+    const fileName = `${index}.jpg`;
+    await image.writeAsync(`images/${fileName}`);
     const croppedImage = await image.getBufferAsync(Jimp.MIME_JPEG);
-    if (croppedImage) await writeFileAsync(`images/${file_name}`, croppedImage, () => {});
+    if (croppedImage)
+      await writeFileAsync(`images/${fileName}`, croppedImage, () => {});
 
-    return file_name;
+    return fileName;
   },
 };

@@ -107,10 +107,10 @@ const resolvers = {
       );
       return cropStickerFromImage({ filterClasses: null });
     },
-    trainClasses: async (_, {classes}) => {
+    trainClasses: async (_, { classes }) => {
       console.log('Train on: ', classes);
-      return startTrainingClasses({classes});
-    }
+      return startTrainingClasses({ classes });
+    },
   },
 };
 
