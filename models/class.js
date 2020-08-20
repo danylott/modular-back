@@ -6,5 +6,6 @@ module.exports = {
     make: String,
     status: { type: String, default: 'collecting' },
     markup: mongoose.Schema.Types.Mixed,
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   }),
 };
