@@ -138,10 +138,7 @@ const resolvers = {
     },
     // eslint-disable-next-line no-unused-vars
     images: async ({ _id }, _, args, info) => {
-      console.log(_id);
       const images = await Image.find({ cls: _id }).exec();
-      console.log(await Image.find({}));
-      console.log(images);
       return images;
     },
   },
