@@ -5,6 +5,7 @@ const { startTrainingClasses } = require('../helpers/train');
 const { Class } = require('../models/class');
 const { User } = require('../models/user');
 const { Image } = require('../models/image');
+const { createClassMarkup } = require('../helpers/class');
 
 const types = `
   type SuccessResponse {
@@ -44,6 +45,7 @@ const types = `
     markup: [ClassMarkup]
     author: User
     images: [Image]
+    image_markup_path: String
   }
 `;
 const queries = `
@@ -58,6 +60,13 @@ const mutations = `
     make: String
     status: String
     markup: [ClassMarkupInput]
+  ): Class
+  updateClassMarkup(
+    name: String
+    make: String
+    status: String
+    markup: [ClassMarkupInput]
+    image: String!
   ): Class
   findOnImage(file: Upload!): FindResponse
   cropImage(file: Upload!): SuccessResponse
@@ -99,6 +108,26 @@ const resolvers = {
       if (markup) cl.markup = markup;
       return cl.save();
     },
+    updateClassMarkup: async (_, { name, make, status, markup, image }) => {
+      const cl = await Class.findOne({ name });
+      if (!cl) return null;
+      const im = await Image.findOne({ _id: image });
+      console.log(im);
+      if (!im || !im.path_cropped) return null;
+
+      if (make) cl.make = make;
+      if (status) cl.status = status;
+      if (markup) cl.markup = markup;
+
+      const data = await createClassMarkup(im.path_cropped, markup);
+      if (!data.success) {
+        console.log('ERROR IN MARKUP IMAGE');
+        return cl.save();
+      }
+      cl.image_markup_path = data.output;
+
+      return cl.save();
+    },
     findOnImage: async (parent, { file }) => {
       const { createReadStream } = await file;
       const stream = createReadStream();
@@ -112,7 +141,6 @@ const resolvers = {
       return processImage({ filterClasses: null });
     },
     cropImage: async (parent, { file }) => {
-      console.log('cropImage');
       const { createReadStream } = await file;
       const stream = createReadStream();
       const path = `images/input.jpg`;

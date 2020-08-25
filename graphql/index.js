@@ -4,6 +4,7 @@ const modelPartials = require('./model');
 const recognitionPartials = require('./recognition');
 const imagePartials = require('./image');
 const userPartials = require('./user');
+const applicationPartials = require('./application');
 
 const typeDefs = gql`
   ${classPartials.types}
@@ -11,12 +12,14 @@ const typeDefs = gql`
   ${recognitionPartials.types}
   ${imagePartials.types}
   ${userPartials.types}
+  ${applicationPartials.types}
 
   type Query {
     ${classPartials.queries}
     ${modelPartials.queries}
     ${imagePartials.queries}
     ${userPartials.queries}
+    ${applicationPartials.queries}
   }
   
   type Mutation {
@@ -25,6 +28,7 @@ const typeDefs = gql`
     ${modelPartials.mutations}
     ${imagePartials.mutations}
     ${userPartials.mutations}
+    ${applicationPartials.mutations}
   }
 `;
 
@@ -34,6 +38,7 @@ const resolvers = {
     ...modelPartials.resolvers.Query,
     ...imagePartials.resolvers.Query,
     ...userPartials.resolvers.Query,
+    ...applicationPartials.resolvers.Query,
   },
   Mutation: {
     ...classPartials.resolvers.Mutation,
@@ -41,6 +46,7 @@ const resolvers = {
     ...modelPartials.resolvers.Mutation,
     ...imagePartials.resolvers.Mutation,
     ...userPartials.resolvers.Mutation,
+    ...applicationPartials.resolvers.Mutation,
   },
   Image: {
     ...imagePartials.resolvers.Image,
