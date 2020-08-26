@@ -14,12 +14,18 @@ const labelImage = async (input, annotation) => {
 
   console.info('labeling returns: %dms', new Date() - start);
 
-  if (!data.annotation) {
+  if (!data.annotation || !data.width || !data.height) {
     console.log(data.message);
     return { success: false };
   }
 
-  return { success: true, annotation: data.annotation, output };
+  return {
+    success: true,
+    width: data.width,
+    height: data.height,
+    annotation: data.annotation,
+    output,
+  };
 };
 
 const cropSticker = async (input, annotation) => {

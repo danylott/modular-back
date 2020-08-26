@@ -8,5 +8,7 @@ module.exports = {
     status: { type: String, default: 'awaiting markup', required: true },
     cls: { type: mongoose.Schema.Types.ObjectId, ref: 'class' },
     annotation: mongoose.Schema.Types.Mixed,
+    height: { type: Number, required: false },
+    width: { type: Number, required: false },
   }),
 };

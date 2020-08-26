@@ -16,6 +16,8 @@ const types = `
     status: String!
     annotation: [Float]
     cls: Class!
+    width: String
+    height: String
   }
 `;
 const queries = `
@@ -76,6 +78,8 @@ const resolvers = {
       }
       image.annotation = data.annotation;
       image.path_labeled = data.output;
+      image.width = data.width;
+      image.height = data.height;
       image.status = 'confirmed';
       image.save();
       // console.log('Image: ', image);
@@ -100,7 +104,7 @@ const resolvers = {
       image.path_cropped = data.output;
       image.save();
       // TODO - change status of class - to HAS TEXT MARKUP
-      console.log('Image class: ', image.cls);
+      // console.log('Image class: ', image.cls);
       return image;
     },
   },
