@@ -10,6 +10,7 @@ const types = `
     date_end: String!
     classes: [String!]!
     date_created: String!
+    status: String
   }
 `;
 const queries = `

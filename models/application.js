@@ -5,6 +5,7 @@ module.exports = {
     date_start: { type: String, required: true },
     date_end: { type: String, required: true },
     date_created: { type: String, required: true },
+    status: { type: String, default: 'awaiting training' },
     classes: mongoose.Schema.Types.Mixed,
   }),
 };

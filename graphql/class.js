@@ -112,7 +112,6 @@ const resolvers = {
       const cl = await Class.findOne({ name });
       if (!cl) return null;
       const im = await Image.findOne({ _id: image });
-      console.log(im);
       if (!im || !im.path_cropped) return null;
 
       if (make) cl.make = make;
@@ -161,7 +160,6 @@ const resolvers = {
     // eslint-disable-next-line no-unused-vars
     author: async ({ author }, _, args, info) => {
       const user = await User.findOne({ _id: author }).exec();
-      console.log(user);
       return user;
     },
     // eslint-disable-next-line no-unused-vars
