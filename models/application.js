@@ -7,5 +7,6 @@ module.exports = {
     date_created: { type: String, required: true },
     status: { type: String, default: 'awaiting training' },
     classes: mongoose.Schema.Types.Mixed,
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   }),
 };

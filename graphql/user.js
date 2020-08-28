@@ -5,6 +5,7 @@ const { AuthenticationError } = require('apollo-server');
 
 const { User } = require('../models/user');
 const { Class } = require('../models/class');
+const { Application } = require('../models/application');
 
 const types = `
   type User {
@@ -14,6 +15,7 @@ const types = `
     company: String!
     is_admin: Boolean!
     classes: [Class]
+    applications: [Application]
   }
 
   type Token {
@@ -89,10 +91,30 @@ const resolvers = {
     classes: async ({ id }, args, _, info) => {
       const user = await User.findById({ _id: id });
       if (user.is_admin) {
-        const cls = await Class.find().exec();
+        const cls = await Class.find()
+          .collation({ locale: 'en', strength: 2 })
+          .sort({ name: 1 })
+          .exec();
         return cls;
       }
-      const cls = await Class.find({ author: id }).exec();
+      const cls = await Class.find({ author: id })
+        .collation({ locale: 'en', strength: 2 })
+        .sort({ name: 1 })
+        .exec();
+      return cls;
+    },
+    // eslint-disable-next-line no-unused-vars
+    applications: async ({ id }, args, _, info) => {
+      const user = await User.findById({ _id: id });
+      if (user.is_admin) {
+        const cls = await Application.find()
+          .sort('-date_created')
+          .exec();
+        return cls;
+      }
+      const cls = await Application.find({ author: id })
+        .sort('-date_created')
+        .exec();
       return cls;
     },
   },

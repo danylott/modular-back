@@ -2,6 +2,7 @@ require('dotenv').config();
 const { AuthenticationError } = require('apollo-server');
 
 const { Application } = require('../models/application');
+const { User } = require('../models/user');
 
 const types = `
   type Application {
@@ -11,6 +12,10 @@ const types = `
     classes: [String!]!
     date_created: String!
     status: String
+    author: User
+  }
+  type ApplicationResponse {
+    success: Boolean!
   }
 `;
 const queries = `
@@ -19,6 +24,7 @@ const queries = `
 
 const mutations = `
     createApplication(date_start: String!, date_end: String!, classes: [String!]!): Application!
+    deleteApplication(id: String!): ApplicationResponse!
 `;
 
 const resolvers = {
@@ -28,7 +34,9 @@ const resolvers = {
       if (!me) {
         throw new AuthenticationError('You are not authenticated');
       }
-      const applications = await Application.find().exec();
+      const applications = await Application.find()
+        .sort('-date_created')
+        .exec();
       return applications;
     },
   },
@@ -41,12 +49,36 @@ const resolvers = {
 
       // eslint-disable-next-line camelcase
       const application = await Application.create({
-        date_start,
-        date_end,
+        date_start: new Date(date_start).toLocaleString(),
+        date_end: new Date(date_end).toLocaleString(),
         classes,
-        date_created: new Date().toString(),
+        author: me.id,
+        date_created: new Date().toLocaleString(),
       });
       return application;
+    },
+    // eslint-disable-next-line
+    deleteApplication: async (parent, { id }, { me }, info) => {
+      if (!me) {
+        throw new AuthenticationError('You are not authenticated');
+      }
+
+      const result = await Application.deleteOne({ _id: id });
+      if (result) {
+        return {
+          success: true,
+        };
+      }
+      return {
+        success: false,
+      };
+    },
+  },
+  Application: {
+    // eslint-disable-next-line no-unused-vars
+    author: async ({ author }, _, args, info) => {
+      const user = await User.findOne({ _id: author }).exec();
+      return user;
     },
   },
 };

@@ -57,6 +57,9 @@ const resolvers = {
   Class: {
     ...classPartials.resolvers.Class,
   },
+  Application: {
+    ...applicationPartials.resolvers.Application,
+  },
 };
 
 module.exports = { typeDefs, resolvers };
