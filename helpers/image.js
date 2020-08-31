@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const axios = require('axios');
 
 const labelImage = async (input, annotation) => {
@@ -49,4 +50,21 @@ const cropSticker = async (input, annotation) => {
   return { success: true, output };
 };
 
-module.exports = { labelImage, cropSticker };
+const deleteFileFromStorage = async (path) => {
+  const curpath = process.cwd();
+  const fullPath = `${curpath}/images/${path}`;
+  if (path) {
+    fs.access(fullPath, fs.F_OK, (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      fs.unlink(fullPath, (e) => {
+        console.error(e);
+      });
+    });
+  }
+};
+
+module.exports = { labelImage, cropSticker, deleteFileFromStorage };

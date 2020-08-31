@@ -6,6 +6,7 @@ const { Class } = require('../models/class');
 const { User } = require('../models/user');
 const { Image } = require('../models/image');
 const { createClassMarkup } = require('../helpers/class');
+const { deleteFileFromStorage } = require('../helpers/image');
 
 const types = `
   type SuccessResponse {
@@ -54,7 +55,7 @@ const queries = `
 
 const mutations = `
   createClass(name: String, make: String): Class
-  deleteClass(id: String): Boolean
+  deleteClass(id: String): SuccessResponse
   updateClass(
     name: String
     make: String
@@ -94,9 +95,21 @@ const resolvers = {
       return Class.create(data);
     },
     // eslint-disable-next-line no-unused-vars
-    deleteClass: async (_, data) => {
-      await Class.findByIdAndDelete(data.id);
-      return true;
+    deleteClass: async (_, { id }, { me }) => {
+      if (!me) {
+        throw new AuthenticationError('You are not authenticated');
+      }
+      const cls = await Class.findOne({ _id: id });
+      if (!cls) return null;
+      const images = await Image.find({ cls: cls._id });
+      images.forEach((image) => {
+        deleteFileFromStorage(image.path);
+        deleteFileFromStorage(image.path_cropped);
+        deleteFileFromStorage(image.path_labeled);
+      });
+      await Image.deleteMany({ cls: cls._id });
+      await Class.deleteOne({ _id: id });
+      return { success: true };
     },
     // eslint-disable-next-line no-unused-vars
     updateClass: async (_, { name, make, status, markup }) => {
