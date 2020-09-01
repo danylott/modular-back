@@ -1,5 +1,6 @@
 const { createWriteStream } = require('fs');
-const { AuthenticationError, UserInputError } = require('apollo-server');
+const { UserInputError } = require('apollo-server');
+const { errorIfNotAuthenticated } = require('../helpers/authentication');
 const { processImage, cropStickerFromImage } = require('../helpers/recognize');
 const { startTrainingClasses } = require('../helpers/train');
 const { Class } = require('../models/class');
@@ -77,10 +78,8 @@ const mutations = `
 const resolvers = {
   Query: {
     // eslint-disable-next-line no-unused-vars
-    class: async (parent, { id }, { me }, _) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    class: async (_, { id }, { me }) => {
+      errorIfNotAuthenticated(me);
       const cls = await Class.findById({ _id: id }).exec();
       return cls;
     },
@@ -88,9 +87,7 @@ const resolvers = {
   Mutation: {
     // eslint-disable-next-line no-unused-vars
     createClass: async (_, data, { me }) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+      errorIfNotAuthenticated(me);
 
       const exists = await Class.findOne({ name: data.name });
       if (exists) {
@@ -104,9 +101,7 @@ const resolvers = {
     },
     // eslint-disable-next-line no-unused-vars
     deleteClass: async (_, { id }, { me }) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+      errorIfNotAuthenticated(me);
       const cls = await Class.findOne({ _id: id });
       if (!cls) return null;
       const images = await Image.find({ cls: cls._id });
@@ -148,7 +143,7 @@ const resolvers = {
 
       return cl.save();
     },
-    findOnImage: async (parent, { file }) => {
+    findOnImage: async (_, { file }) => {
       const { createReadStream } = await file;
       const stream = createReadStream();
       const path = `images/input.jpg`;
@@ -160,7 +155,7 @@ const resolvers = {
       );
       return processImage({ filterClasses: null });
     },
-    cropImage: async (parent, { file }) => {
+    cropImage: async (_, { file }) => {
       const { createReadStream } = await file;
       const stream = createReadStream();
       const path = `images/input.jpg`;
@@ -179,12 +174,12 @@ const resolvers = {
   },
   Class: {
     // eslint-disable-next-line no-unused-vars
-    author: async ({ author }, _, args, info) => {
+    author: async ({ author }) => {
       const user = await User.findOne({ _id: author }).exec();
       return user;
     },
     // eslint-disable-next-line no-unused-vars
-    images: async ({ _id }, _, args, info) => {
+    images: async ({ _id }) => {
       const images = await Image.find({ cls: _id }).exec();
       return images;
     },

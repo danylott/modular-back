@@ -2,6 +2,7 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { AuthenticationError } = require('apollo-server');
+const { errorIfNotAuthenticated } = require('../helpers/authentication');
 
 const { User } = require('../models/user');
 const { Class } = require('../models/class');
@@ -35,25 +36,21 @@ const mutations = `
 const resolvers = {
   Query: {
     // eslint-disable-next-line no-unused-vars
-    user: async (parent, _, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    user: async (_, __, { me }) => {
+      errorIfNotAuthenticated(me);
       const user = await User.findById({ _id: me.id }).exec();
       return user;
     },
     // eslint-disable-next-line no-unused-vars
-    users: async (parent, args, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    users: async (_, __, { me }) => {
+      errorIfNotAuthenticated(me);
       const users = await User.find().exec();
       return users;
     },
   },
   Mutation: {
     // eslint-disable-next-line no-unused-vars
-    createUser: async (parent, { email, name, company, password }, _, info) => {
+    createUser: async (_, { email, name, company, password }) => {
       const user = await User.create({
         email,
         name,
@@ -64,7 +61,7 @@ const resolvers = {
       return user;
     },
     // eslint-disable-next-line no-unused-vars
-    login: async (parent, { email, password }, _, info) => {
+    login: async (_, { email, password }) => {
       const user = await User.findOne({ email }).exec();
 
       if (!user) {
@@ -87,8 +84,7 @@ const resolvers = {
     },
   },
   User: {
-    // eslint-disable-next-line no-unused-vars
-    classes: async ({ id }, args, _, info) => {
+    classes: async ({ id }) => {
       const user = await User.findById({ _id: id });
       if (user.is_admin) {
         const cls = await Class.find()
@@ -103,8 +99,7 @@ const resolvers = {
         .exec();
       return cls;
     },
-    // eslint-disable-next-line no-unused-vars
-    applications: async ({ id }, args, _, info) => {
+    applications: async ({ id }) => {
       const user = await User.findById({ _id: id });
       if (user.is_admin) {
         const cls = await Application.find()

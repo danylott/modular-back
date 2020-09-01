@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { AuthenticationError } = require('apollo-server');
+const { errorIfNotAuthenticated } = require('../helpers/authentication');
 
 const { Application } = require('../models/application');
 const { User } = require('../models/user');
@@ -30,10 +30,8 @@ const mutations = `
 const resolvers = {
   Query: {
     // eslint-disable-next-line no-unused-vars
-    applications: async (parent, args, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    applications: async (_, __, { me }) => {
+      errorIfNotAuthenticated(me);
       const applications = await Application.find()
         .sort('-date_created')
         .exec();
@@ -42,10 +40,8 @@ const resolvers = {
   },
   Mutation: {
     // eslint-disable-next-line
-    createApplication: async (parent, { date_start, date_end, classes }, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    createApplication: async (_, { date_start, date_end, classes }, { me }) => {
+      errorIfNotAuthenticated(me);
 
       // eslint-disable-next-line camelcase
       const application = await Application.create({
@@ -58,10 +54,8 @@ const resolvers = {
       return application;
     },
     // eslint-disable-next-line
-    deleteApplication: async (parent, { id }, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    deleteApplication: async (_, { id }, { me }) => {
+      errorIfNotAuthenticated(me);
 
       const result = await Application.deleteOne({ _id: id });
       if (result) {
@@ -76,7 +70,7 @@ const resolvers = {
   },
   Application: {
     // eslint-disable-next-line no-unused-vars
-    author: async ({ author }, _, args, info) => {
+    author: async ({ author }) => {
       const user = await User.findOne({ _id: author }).exec();
       return user;
     },

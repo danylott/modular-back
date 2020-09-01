@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { createWriteStream } = require('fs');
-const { AuthenticationError } = require('apollo-server');
+const { errorIfNotAuthenticated } = require('../helpers/authentication');
 
 const { Class } = require('../models/class');
 const { Image } = require('../models/image');
@@ -34,19 +34,15 @@ const resolvers = {
   Query: {
     // eslint-disable-next-line no-unused-vars
     images: async (parent, args, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+      errorIfNotAuthenticated(me);
       const images = await Image.find().exec();
       return images;
     },
   },
   Mutation: {
     // eslint-disable-next-line
-    createImage: async (parent, { file, cls_id }, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    createImage: async (_, { file, cls_id }, { me }) => {
+      errorIfNotAuthenticated(me);
 
       const { createReadStream } = await file;
       const stream = createReadStream();
@@ -62,10 +58,8 @@ const resolvers = {
       return image;
     },
     // eslint-disable-next-line no-unused-vars
-    createAnnotation: async (parent, { id, annotation }, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    createAnnotation: async (_, { id, annotation }, { me }) => {
+      errorIfNotAuthenticated(me);
 
       const image = await Image.findOne({ _id: id });
       if (!image) {
@@ -86,10 +80,8 @@ const resolvers = {
       return image;
     },
     // eslint-disable-next-line no-unused-vars
-    createSticker: async (parent, { id }, { me }, info) => {
-      if (!me) {
-        throw new AuthenticationError('You are not authenticated');
-      }
+    createSticker: async (_, { id }, { me }) => {
+      errorIfNotAuthenticated(me);
 
       const image = await Image.findOne({ _id: id });
       if (!image || !image.annotation) {
@@ -110,7 +102,7 @@ const resolvers = {
   },
   Image: {
     // eslint-disable-next-line no-unused-vars
-    cls: async ({ cls }, args, _, info) => {
+    cls: async ({ cls }) => {
       const classObject = await Class.findOne({ _id: cls }).exec();
       return classObject;
     },
