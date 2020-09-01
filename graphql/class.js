@@ -1,5 +1,5 @@
 const { createWriteStream } = require('fs');
-const { AuthenticationError } = require('apollo-server');
+const { AuthenticationError, UserInputError } = require('apollo-server');
 const { processImage, cropStickerFromImage } = require('../helpers/recognize');
 const { startTrainingClasses } = require('../helpers/train');
 const { Class } = require('../models/class');
@@ -90,6 +90,14 @@ const resolvers = {
     createClass: async (_, data, { me }) => {
       if (!me) {
         throw new AuthenticationError('You are not authenticated');
+      }
+
+      const exists = await Class.findOne({ name: data.name });
+      if (exists) {
+        throw new UserInputError(
+          'Class with this name already exists in system! Please choose different class name',
+          { code: 'CLASS_EXISTS' }
+        );
       }
       data.author = me.id;
       return Class.create(data);
