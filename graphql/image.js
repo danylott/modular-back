@@ -1,11 +1,12 @@
 require('dotenv').config();
 const { createWriteStream } = require('fs');
-const { errorIfNotAuthenticated } = require('../helpers/authentication');
 
 const { Class } = require('../models/class');
 const { Image } = require('../models/image');
 
 const { labelImage, cropSticker } = require('../helpers/image');
+const { errorIfNotAuthenticated } = require('../helpers/authentication');
+const { deleteImageFromStorage } = require('../helpers/image');
 
 const types = `
   type Image {
@@ -19,6 +20,10 @@ const types = `
     width: String
     height: String
   }
+
+  type ImageResponse {
+    success: Boolean!
+  }
 `;
 const queries = `
     images: [Image!]!
@@ -28,6 +33,7 @@ const mutations = `
     createImage(file: Upload!, cls_id: String!): Image!
     createAnnotation(id: String!, annotation: [Float]!): Image!
     createSticker(id: String!): Image!
+    deleteImage(id: String!): ImageResponse!
 `;
 
 const resolvers = {
@@ -98,6 +104,18 @@ const resolvers = {
       // TODO - change status of class - to HAS TEXT MARKUP
       // console.log('Image class: ', image.cls);
       return image;
+    },
+    deleteImage: async (_, { id }, { me }) => {
+      errorIfNotAuthenticated(me);
+
+      const image = await Image.findOne({ _id: id });
+      if (!image) {
+        return { success: false };
+      }
+      deleteImageFromStorage(image);
+      await Image.deleteOne({ _id: id });
+
+      return { success: true };
     },
   },
   Image: {

@@ -7,7 +7,10 @@ const { Class } = require('../models/class');
 const { User } = require('../models/user');
 const { Image } = require('../models/image');
 const { createClassMarkup } = require('../helpers/class');
-const { deleteFileFromStorage } = require('../helpers/image');
+const {
+  deleteImageFromStorage,
+  deleteFileFromStorage,
+} = require('../helpers/image');
 
 const types = `
   type SuccessResponse {
@@ -106,10 +109,9 @@ const resolvers = {
       if (!cls) return null;
       const images = await Image.find({ cls: cls._id });
       images.forEach((image) => {
-        deleteFileFromStorage(image.path);
-        deleteFileFromStorage(image.path_cropped);
-        deleteFileFromStorage(image.path_labeled);
+        deleteImageFromStorage(image);
       });
+      deleteFileFromStorage(cls.image_markup_path);
       await Image.deleteMany({ cls: cls._id });
       await Class.deleteOne({ _id: id });
       return { success: true };

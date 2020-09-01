@@ -61,10 +61,23 @@ const deleteFileFromStorage = async (path) => {
       }
 
       fs.unlink(fullPath, (e) => {
-        console.error(e);
+        if (e) {
+          console.error(e);
+        }
       });
     });
   }
 };
 
-module.exports = { labelImage, cropSticker, deleteFileFromStorage };
+const deleteImageFromStorage = async (image) => {
+  deleteFileFromStorage(image.path);
+  deleteFileFromStorage(image.path_cropped);
+  deleteFileFromStorage(image.path_labeled);
+};
+
+module.exports = {
+  labelImage,
+  cropSticker,
+  deleteFileFromStorage,
+  deleteImageFromStorage,
+};
