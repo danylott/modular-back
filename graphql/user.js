@@ -1,12 +1,13 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { AuthenticationError } = require('apollo-server');
+const { AuthenticationError, ApolloError } = require('apollo-server');
 const { errorIfNotAuthenticated } = require('../helpers/authentication');
 
 const { User } = require('../models/user');
 const { Class } = require('../models/class');
 const { Application } = require('../models/application');
+const { deleteClassById } = require('../helpers/class');
 
 const types = `
   type User {
@@ -22,6 +23,10 @@ const types = `
   type Token {
     token: String!
   }
+  
+  type UserResponse {
+    success: Boolean!
+  }
 `;
 const queries = `
   user: User!
@@ -31,6 +36,7 @@ const queries = `
 const mutations = `
   createUser(email: String!, name: String, company: String!, password: String!): User!
   login(email: String!, password: String!): Token!
+  deleteUser(id: String!): UserResponse
 `;
 
 const resolvers = {
@@ -50,7 +56,18 @@ const resolvers = {
   },
   Mutation: {
     // eslint-disable-next-line no-unused-vars
-    createUser: async (_, { email, name, company, password }) => {
+    createUser: async (_, { email, name, company, password }, { me }) => {
+      const currentUser = await User.findOne({ _id: me.id });
+      if (!currentUser.is_admin) {
+        throw new ApolloError('Only admins can create users!');
+      }
+
+      const exists = await User.findOne({ email });
+      if (exists) {
+        throw new ApolloError(
+          'User with this email already exists! Please choose another email!'
+        );
+      }
       const user = await User.create({
         email,
         name,
@@ -81,6 +98,25 @@ const resolvers = {
       return {
         token,
       };
+    },
+    deleteUser: async (_, { id }, { me }) => {
+      const currentUser = await User.findOne({ _id: me.id });
+      if (!currentUser.is_admin) {
+        throw new ApolloError('Only admins can delete users!');
+      }
+      const user = await User.findOne({ _id: id });
+      if (!user) return null;
+      if (user.is_admin) {
+        throw new ApolloError('You cant delete admin like this!');
+      }
+
+      const classes = await Class.find({ author: id });
+      for (cls of classes) {
+        await deleteClassById(cls._id);
+      }
+      await Application.deleteMany({ author: id });
+      await User.deleteOne({ _id: id });
+      return { success: true };
     },
   },
   User: {

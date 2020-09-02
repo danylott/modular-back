@@ -23,12 +23,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
   },
-  classes: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'class',
-    },
-  ],
 });
 
 userSchema.pre('save', function() {

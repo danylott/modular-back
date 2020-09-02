@@ -6,11 +6,7 @@ const { startTrainingClasses } = require('../helpers/train');
 const { Class } = require('../models/class');
 const { User } = require('../models/user');
 const { Image } = require('../models/image');
-const { createClassMarkup } = require('../helpers/class');
-const {
-  deleteImageFromStorage,
-  deleteFileFromStorage,
-} = require('../helpers/image');
+const { createClassMarkup, deleteClassById } = require('../helpers/class');
 
 const types = `
   type SuccessResponse {
@@ -107,13 +103,7 @@ const resolvers = {
       errorIfNotAuthenticated(me);
       const cls = await Class.findOne({ _id: id });
       if (!cls) return null;
-      const images = await Image.find({ cls: cls._id });
-      images.forEach((image) => {
-        deleteImageFromStorage(image);
-      });
-      deleteFileFromStorage(cls.image_markup_path);
-      await Image.deleteMany({ cls: cls._id });
-      await Class.deleteOne({ _id: id });
+      await deleteClassById(id);
       return { success: true };
     },
     // eslint-disable-next-line no-unused-vars
