@@ -17,11 +17,19 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
+    required: false,
+  },
+  registration_uuid: {
+    type: String,
     required: true,
   },
   is_admin: {
     type: Boolean,
     required: true,
+  },
+  is_confirmed: {
+    type: Boolean,
+    default: false,
   },
 });
 
