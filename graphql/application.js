@@ -45,8 +45,8 @@ const resolvers = {
 
       // eslint-disable-next-line camelcase
       const application = await Application.create({
-        date_start: new Date(date_start).toLocaleString(),
-        date_end: new Date(date_end).toLocaleString(),
+        date_start: new Date(date_start).toDateString(),
+        date_end: new Date(date_end).toDateString(),
         classes,
         author: me.id,
         date_created: new Date().toLocaleString(),

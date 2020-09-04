@@ -1,8 +1,8 @@
-const { AuthenticationError } = require('apollo-server');
+const { ApolloError } = require('apollo-server');
 
 const errorIfNotAuthenticated = (me) => {
   if (!me) {
-    throw new AuthenticationError('You are not authenticated');
+    throw new ApolloError('You are not authenticated');
   }
 };
 

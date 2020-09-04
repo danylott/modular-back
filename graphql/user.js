@@ -1,7 +1,7 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { AuthenticationError, ApolloError } = require('apollo-server');
+const { ApolloError } = require('apollo-server');
 const { v4 } = require('uuid');
 
 const { User } = require('../models/user');
@@ -73,13 +73,17 @@ const resolvers = {
     createUser: async (_, { email, name, company }, { me }) => {
       const currentUser = await User.findOne({ _id: me.id });
       if (!currentUser.is_admin) {
-        throw new ApolloError('Only admins can create users!');
+        throw new ApolloError(
+          'Only admins can create users!',
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       const exists = await User.findOne({ email });
       if (exists) {
         throw new ApolloError(
-          'User with this email already exists! Please choose another email!'
+          'User with this email already exists! Please choose another email!',
+          'CUSTOM_ERROR_CODE'
         );
       }
 
@@ -93,7 +97,10 @@ const resolvers = {
       });
 
       if (!user) {
-        throw new ApolloError('User was not created - server error!');
+        throw new ApolloError(
+          'User was not created - server error!',
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       const to = email;
@@ -118,7 +125,10 @@ const resolvers = {
       const user = await User.findOne({ email }).exec();
 
       if (!user) {
-        throw new ApolloError('User with current email does not exists');
+        throw new ApolloError(
+          'User with current email does not exists',
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       const to = email;
@@ -143,12 +153,13 @@ const resolvers = {
 
       if (!user) {
         throw new ApolloError(
-          'User with current Email does not exists - Server error'
+          'User with current Email does not exists - Server error',
+          'CUSTOM_ERROR_CODE'
         );
       }
 
       if (password1 !== password2) {
-        throw new ApolloError('Passwords does not match!');
+        throw new ApolloError('Passwords does not match!', 'CUSTOM_ERROR_CODE');
       }
       user.password = password1;
       user.is_confirmed = true;
@@ -160,19 +171,26 @@ const resolvers = {
       const user = await User.findOne({ email }).exec();
 
       if (!user) {
-        throw new AuthenticationError(`User with this email does not exists`);
+        throw new ApolloError(
+          `User with this email does not exists`,
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       if (!user.is_confirmed) {
-        throw new AuthenticationError(
-          'Please, confirm at first your email before log in'
+        throw new ApolloError(
+          'Please, confirm at first your email before log in',
+          'CUSTOM_ERROR_CODE'
         );
       }
 
       const matchPasswords = bcrypt.compareSync(password, user.password);
 
       if (!matchPasswords) {
-        throw new AuthenticationError(`Password you've entered is incorrect`);
+        throw new ApolloError(
+          `Password you've entered is incorrect`,
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       const token = jwt.sign({ id: user.id }, process.env.PUBLIC_JWT_KEY, {
@@ -188,12 +206,18 @@ const resolvers = {
     deleteUser: async (_, { id }, { me }) => {
       const currentUser = await User.findOne({ _id: me.id });
       if (!currentUser.is_admin) {
-        throw new ApolloError('Only admins can delete users!');
+        throw new ApolloError(
+          'Only admins can delete users!',
+          'CUSTOM_ERROR_CODE'
+        );
       }
       const user = await User.findOne({ _id: id });
       if (!user) return null;
       if (user.is_admin) {
-        throw new ApolloError('You cant delete admin like this!');
+        throw new ApolloError(
+          'You cant delete admin like this!',
+          'CUSTOM_ERROR_CODE'
+        );
       }
 
       const classes = await Class.find({ author: id });

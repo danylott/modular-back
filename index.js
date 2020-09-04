@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { ApolloServer, AuthenticationError } = require('apollo-server');
+const { ApolloServer, ApolloError } = require('apollo-server');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
@@ -13,7 +13,7 @@ const getUser = async (req) => {
     try {
       return await jwt.verify(token, process.env.PUBLIC_JWT_KEY);
     } catch (e) {
-      throw new AuthenticationError('Invalid Token');
+      throw new ApolloError('Invalid Token');
     }
   }
   return null;

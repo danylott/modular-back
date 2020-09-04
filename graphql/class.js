@@ -1,5 +1,5 @@
 const { createWriteStream } = require('fs');
-const { UserInputError } = require('apollo-server');
+const { ApolloError } = require('apollo-server');
 const { errorIfNotAuthenticated } = require('../helpers/authentication');
 const { processImage, cropStickerFromImage } = require('../helpers/recognize');
 const { startTrainingClasses } = require('../helpers/train');
@@ -90,9 +90,9 @@ const resolvers = {
 
       const exists = await Class.findOne({ name: data.name });
       if (exists) {
-        throw new UserInputError(
+        throw new ApolloError(
           'Class with this name already exists in system! Please choose different class name',
-          { code: 'CLASS_EXISTS' }
+          'CUSTOM_ERROR_CODE'
         );
       }
       data.author = me.id;
