@@ -47,6 +47,7 @@ const types = `
     author: User
     images: [Image]
     image_markup_path: String
+    count_labeled_images: Int
   }
 `;
 const queries = `
@@ -174,6 +175,11 @@ const resolvers = {
     images: async ({ _id }) => {
       const images = await Image.find({ cls: _id }).exec();
       return images;
+    },
+    // eslint-disable-next-line
+    count_labeled_images: async ({ _id }) => {
+      const images = await Image.find({ cls: _id }).exec();
+      return images.filter((image) => image.annotation).length;
     },
   },
 };
