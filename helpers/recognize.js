@@ -1,7 +1,7 @@
 require('dotenv').config();
 const Jimp = require('jimp');
 const axios = require('axios');
-const { cropImageByCoordinates } = require('./imageCropHelper');
+const { markImageByCoordinates } = require('./imageCropHelper');
 const { Class } = require('../models/class');
 
 const cropStickerFromImage = async ({ filterClasses }) => {
@@ -55,30 +55,22 @@ const processImage = async ({ filterClasses }) => {
     return { found: true, score, model: className };
   }
 
-  let index = 0;
   const fieldResults = {};
   for (const field of clss.markup) {
-    const imageName = await cropImageByCoordinates(
-      field,
-      crop,
-      './images/crop.jpg',
-      index
-    );
-    index += 1;
-
-    const { data: rekognizeData } = await axios.post(
-      `${process.env.PYTHON_API}rekognize-text/`,
-      {
-        input: `${curpath}/images/${imageName}`,
-      }
-    );
-
-    fieldResults[field.field.toLowerCase()] = rekognizeData.text;
-    console.info(
-      `get text from python API for ${field.field}: %dms`,
-      new Date() - start
-    );
+    await markImageByCoordinates(field, crop, './images/crop.jpg');
   }
+  const { data: recognizeData } = await axios.post(
+    `${process.env.PYTHON_API}recognize-text/`,
+    {
+      input: `${curpath}/images/crop.jpg`,
+      markup: clss.markup,
+    }
+  );
+  console.log(recognizeData);
+  fieldResults.model = recognizeData.Model;
+  fieldResults.color = recognizeData.Color;
+  fieldResults.size = recognizeData.Size;
+  console.info(`get text from python API: %dms`, new Date() - start);
   await crop.writeAsync('./images/marked.jpg');
   console.log(fieldResults);
   return { found: true, score, class: clss, ...fieldResults };
