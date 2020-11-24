@@ -46,7 +46,7 @@ const resolvers = {
       console.info('restart flask-api');
       exec(process.env.TERMINAL_COMMAND_TO_RESTART_PYTHON_API, (err, stdout, stderr) => {
           if (err) {
-              сonsole.error(err);
+              СЃonsole.error(err);
               return {success: false};
           } else {
               console.log(`stdout: ${stdout}`);

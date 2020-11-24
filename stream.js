@@ -43,6 +43,7 @@ async function handleSingleImage(buffer) {
           positionId,
           recognitionId,
           barcode,
+          image: buffer ? buffer.toString('base64') : null,
         });
 
         await sleep(10);
