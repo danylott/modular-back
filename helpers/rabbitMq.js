@@ -1,3 +1,4 @@
+require('dotenv').config();
 const amqp = require('amqplib');
 const { Session } = require('../models/session');
 const { Class } = require('../models/class');
@@ -47,6 +48,27 @@ const startAll = () => {
     console.log(
       `RabbitMQ: New session created at position ${session.positionId} from supplier ${session.supplier}`
     );
+
+    const { exec } = require('child_process');
+    console.info(`starting ${process.env.IMAGE_STREAM_PM2_APP_NAME}`);
+    exec(
+      `pm2 delete ${process.env.IMAGE_STREAM_PM2_APP_NAME}`,
+      (err, stdout, stderr) => {
+        if (err) {
+            console.log(err);
+        } 
+        console.log(`stdout: ${stdout}`);
+        console.log(`deleted previous ${process.env.IMAGE_STREAM_PM2_APP_NAME}`);
+    });
+    exec(
+      `pm2 start --name "${process.env.IMAGE_STREAM_PM2_APP_NAME}" "cd /var/www/back-end && ffmpeg -framerate 30 -i /dev/video0 -update 1 -r 1 -f image2 - | node stream.js --position ${session.positionId}"`,
+      (err, stdout, stderr) => {
+        if (err) {
+            console.log(err);
+        } 
+        console.log(`stdout: ${stdout}`);
+        console.log(`started new ${process.env.IMAGE_STREAM_PM2_APP_NAME} with positionId: ${session.positionId}`);
+    });
   });
 
   consume('session_end', async ({ positionId }) => {
@@ -55,6 +77,17 @@ const startAll = () => {
       { $set: { inProgress: false, updatedAt: Date.now() } }
     );
     console.log(`RabbitMQ: Session closed at position ${positionId}`);
+
+    const { exec } = require('child_process');
+    exec(
+      `pm2 delete ${process.env.IMAGE_STREAM_PM2_APP_NAME}`,
+      (err, stdout, stderr) => {
+        if (err) {
+          console.log(err);
+        } 
+        console.log(`stdout: ${stdout}`);
+        console.log(`deleted ${process.env.IMAGE_STREAM_PM2_APP_NAME} with positionId: ${positionId}`);
+    });
   });
 
   consume(
