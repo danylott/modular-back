@@ -7,6 +7,7 @@ const { processImage } = require('./helpers/recognize');
 const rabbitMq = require('./helpers/rabbitMq');
 const { Recognition } = require('./models/recognition');
 const { Session } = require('./models/session');
+const { getTotalSimilarity } = require('./helpers/recognitionDifference')
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 
@@ -14,44 +15,6 @@ const writeFileAsync = promisify(fs.writeFile);
 
 function sleep(s) {
   return new Promise((resolve) => setTimeout(resolve, s * 1000));
-}
-
-function editDistance(s1, s2) {
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-
-  const costs = new Array();
-  for (let i = 0; i <= s1.length; i++) {
-    let lastValue = i;
-    for (let j = 0; j <= s2.length; j++) {
-      if (i == 0) costs[j] = j;
-      else if (j > 0) {
-        let newValue = costs[j - 1];
-        if (s1.charAt(i - 1) != s2.charAt(j - 1))
-          newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-        costs[j - 1] = lastValue;
-        lastValue = newValue;
-      }
-    }
-    if (i > 0) costs[s2.length] = lastValue;
-  }
-  return costs[s2.length];
-}
-
-function similarity(s1, s2) {
-  let longer = s1;
-  let shorter = s2;
-  if (s1.length < s2.length) {
-    longer = s2;
-    shorter = s1;
-  }
-  const longerLength = longer.length;
-  if (longerLength == 0) {
-    return 1.0;
-  }
-  return (
-    (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength)
-  );
 }
 
 let busy = false;
@@ -111,29 +74,8 @@ async function handleSingleImage(buffer) {
         score: res.score,
         recognized: { model: res.model, size: res.size, color: res.color },
       });
-      let totalSimilatiry = 0;
-      if (previousRecognition) {
-        if (Object.keys(previousRecognition.recognized).length > 0) {
-          previousRecognition.recognized.size &&
-            (totalSimilatiry += similarity(
-              previousRecognition.recognized.size,
-              recognition.recognized.size
-            ));
-          previousRecognition.recognized.model &&
-            (totalSimilatiry += similarity(
-              previousRecognition.recognized.model,
-              recognition.recognized.model
-            ));
-          previousRecognition.recognized.color &&
-            (totalSimilatiry += similarity(
-              previousRecognition.recognized.color,
-              recognition.recognized.color
-            ));
-          totalSimilatiry /= 3;
-          console.log('totalSimilarity: ', totalSimilatiry);
-        }
-      }
-      if (totalSimilatiry <= 0.95) {
+      let totalSimilarity = getTotalSimilarity(recognition, previousRecognition);
+      if (totalSimilarity <= 0.95) {
         rabbitMq.publish('recognitions', {
           positionId,
           recognitionId: recognition._id,

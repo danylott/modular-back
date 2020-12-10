@@ -1,19 +1,79 @@
 require('dotenv').config();
+
 const amqp = require('amqplib');
+const NodeWebcam = require( "node-webcam" );
+const Dynamsoft = require('dynamsoft-node-barcode');
+
 const { Session } = require('../models/session');
 const { Class } = require('../models/class');
 const { Recognition } = require('../models/recognition');
+const { recognizeFullSingleImage } = require('./recognizeFullSingleImage')
+
+Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 
 let channel;
+let reader;
 
 const init = async (amqpUrl) => {
   const cluster = await amqp.connect(amqpUrl);
   channel = await cluster.createChannel();
+  reader = await Dynamsoft.BarcodeReader.createInstance();
 };
 
 const close = () => {
   // channel.close()
 };
+
+const webcamOptions = {
+
+  //Picture related
+
+  width: 2880,
+
+  height: 1620,
+
+  quality: 90,
+
+  // Number of frames to capture
+  // More the frames, longer it takes to capture
+  // Use higher framerate for quality. Ex: 60
+
+  frames: 1,
+
+  delay: 0,
+
+
+  //Save shots in memory
+
+  saveShots: true,
+
+
+  // [jpeg, png] support varies
+  // Webcam.OutputTypes
+
+  output: "jpeg",
+
+
+  //Which camera to use
+  //Use Webcam.list() for results
+  //false for default device
+
+  device: false,
+
+
+  // [location, buffer, base64]
+  // Webcam.CallbackReturnTypes
+
+  callbackReturn: "buffer",
+
+
+  //Logging
+
+  verbose: false
+
+};
+
+const Webcam = NodeWebcam.create( webcamOptions );
 
 const publish = async (queue, message) => {
   try {
@@ -48,27 +108,6 @@ const startAll = () => {
     console.log(
       `RabbitMQ: New session created at position ${session.positionId} from supplier ${session.supplier}`
     );
-
-    const { exec } = require('child_process');
-    console.info(`starting ${process.env.IMAGE_STREAM_PM2_APP_NAME}`);
-    exec(
-      `pm2 delete ${process.env.IMAGE_STREAM_PM2_APP_NAME}`,
-      (err, stdout, stderr) => {
-        if (err) {
-            console.log(err);
-        } 
-        console.log(`stdout: ${stdout}`);
-        console.log(`deleted previous ${process.env.IMAGE_STREAM_PM2_APP_NAME}`);
-    });
-    exec(
-      `pm2 start --name "${process.env.IMAGE_STREAM_PM2_APP_NAME}" "cd /var/www/back-end && ffmpeg -framerate 30 -i /dev/video0 -update 1 -r 1 -f image2 - | node stream.js --position ${session.positionId}"`,
-      (err, stdout, stderr) => {
-        if (err) {
-            console.log(err);
-        } 
-        console.log(`stdout: ${stdout}`);
-        console.log(`started new ${process.env.IMAGE_STREAM_PM2_APP_NAME} with positionId: ${session.positionId}`);
-    });
   });
 
   consume('session_end', async ({ positionId }) => {
@@ -77,17 +116,6 @@ const startAll = () => {
       { $set: { inProgress: false, updatedAt: Date.now() } }
     );
     console.log(`RabbitMQ: Session closed at position ${positionId}`);
-
-    const { exec } = require('child_process');
-    exec(
-      `pm2 delete ${process.env.IMAGE_STREAM_PM2_APP_NAME}`,
-      (err, stdout, stderr) => {
-        if (err) {
-          console.log(err);
-        } 
-        console.log(`stdout: ${stdout}`);
-        console.log(`deleted ${process.env.IMAGE_STREAM_PM2_APP_NAME} with positionId: ${positionId}`);
-    });
   });
 
   consume(
@@ -107,6 +135,34 @@ const startAll = () => {
     }
   );
 
+  consume(
+    'take_snapshot',
+    async({ positionId }) => {
+      try {
+        console.log(`RabbitMQ: Receive "Take Snapshot" for ${positionId}`);
+        Webcam.capture( "images/input", function( err, data ) {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          console.log(data);
+          recognizeFullSingleImage(data, positionId, reader)
+            .then(recognitionData => {
+              publish('recognitions', recognitionData);
+            })
+            .catch(err => console.log(err));
+        });
+      } catch (error) {
+        console.error(
+          `RabbitMQ: Receive "Take Snapshot" event, but can't handle it: ${error}`
+        );
+      }
+    }
+  );
+
+  // publish("take_snapshot", {
+  //   positionId: 2,
+  // })
   // publish("session_start", {
   //   positionId: 2,
   //   supplier: "ADIDAS ESPAÑA, S.A.U.",
