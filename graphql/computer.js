@@ -40,7 +40,12 @@ const resolvers = {
     // eslint-disable-next-line
     createComputer: async (_, { name, position, type, active_model_id }, { me }) => {
       errorIfNotAuthenticated(me);
-      return await Computer.create({ name, position, type, active_model: active_model_id });
+      return await Computer.create({
+        name,
+        position,
+        type,
+        active_model: active_model_id,
+      });
     },
     deleteComputer: async (_, { position }, { me }) => {
       errorIfNotAuthenticated(me);

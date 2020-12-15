@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const amqp = require('amqplib');
-const NodeWebcam = require( "node-webcam" );
+const NodeWebcam = require('node-webcam');
 const Dynamsoft = require('dynamsoft-node-barcode');
 
 const { Session } = require('../models/session');
@@ -11,7 +11,7 @@ const { recognizeFullSingleImage } = require('./recognizeFullSingleImage');
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 const webcamOptions = {
-  //Picture related
+  // Picture related
   width: 2880,
   height: 1620,
   quality: 90,
@@ -22,28 +22,27 @@ const webcamOptions = {
   frames: 1,
   delay: 0,
 
-  //Save shots in memory
+  // Save shots in memory
   saveShots: true,
 
   // [jpeg, png] support varies
   // Webcam.OutputTypes
-  output: "jpeg",
+  output: 'jpeg',
 
-  //Which camera to use
-  //Use Webcam.list() for results
-  //false for default device
+  // Which camera to use
+  // Use Webcam.list() for results
+  // false for default device
   device: false,
 
   // [location, buffer, base64]
   // Webcam.CallbackReturnTypes
-  callbackReturn: "buffer",
+  callbackReturn: 'buffer',
 
-  //Logging
-  verbose: false
-
+  // Logging
+  verbose: false,
 };
 
-const Webcam = NodeWebcam.create( webcamOptions );
+const Webcam = NodeWebcam.create(webcamOptions);
 
 let channel;
 let reader;
@@ -85,16 +84,16 @@ const consume = async (queue, callback) => {
 const startAll = () => {
   consume('session_start', async (message) => {
     publish(`computer_${message.positionId}`, {
-      topic: "session_start",
+      topic: 'session_start',
       payload: message,
-    })
+    });
   });
 
   consume('session_end', async ({ positionId }) => {
     publish(`computer_${positionId}`, {
-      topic: "session_end",
+      topic: 'session_end',
       payload: { positionId },
-    })
+    });
   });
 
   consume(
@@ -114,19 +113,16 @@ const startAll = () => {
     }
   );
 
-  consume(
-    'take_snapshot',
-    async({ positionId }) => {
-      publish(`computer_${positionId}`, {
-        topic: "take_snapshot",
-        payload: { positionId },
-      })
-    }
-  );
+  consume('take_snapshot', async ({ positionId }) => {
+    publish(`computer_${positionId}`, {
+      topic: 'take_snapshot',
+      payload: { positionId },
+    });
+  });
 
   consume(
     `computer_${process.env.COMPUTER_POSITION}`,
-    async({ topic, payload }) => {
+    async ({ topic, payload }) => {
       try {
         console.log(`Receive: ${topic}, ${JSON.stringify(payload)}`);
         await handleRabbitMqTopic(topic, payload, reader);
@@ -161,7 +157,7 @@ const startAll = () => {
 };
 
 async function handleRabbitMqTopic(topic, payload, reader) {
-  switch (topic){
+  switch (topic) {
     case 'session_start':
       const classes = await Class.find({ make: payload.brands });
       payload.classes = classes.map((el) => el.name);
@@ -172,7 +168,6 @@ async function handleRabbitMqTopic(topic, payload, reader) {
       );
       break;
 
-
     case 'session_end':
       await Session.updateMany(
         { positionId: payload.positionId },
@@ -181,21 +176,22 @@ async function handleRabbitMqTopic(topic, payload, reader) {
       console.log(`RabbitMQ: Session closed at position ${payload.positionId}`);
       break;
 
-
     case 'take_snapshot':
       try {
-        console.log(`RabbitMQ: Receive "Take Snapshot" for ${payload.positionId}`);
-        Webcam.capture( "images/input", function( err, data ) {
+        console.log(
+          `RabbitMQ: Receive "Take Snapshot" for ${payload.positionId}`
+        );
+        Webcam.capture('images/input', function(err, data) {
           if (err) {
             console.log(err);
             return;
           }
           console.log(data);
           recognizeFullSingleImage(data, payload.positionId, reader)
-            .then(recognitionData => {
+            .then((recognitionData) => {
               publish('recognitions', recognitionData);
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
         });
       } catch (error) {
         console.error(
