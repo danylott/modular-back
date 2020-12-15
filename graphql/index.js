@@ -5,6 +5,7 @@ const recognitionPartials = require('./recognition');
 const imagePartials = require('./image');
 const userPartials = require('./user');
 const applicationPartials = require('./application');
+const computerPartials = require('./computer');
 
 const typeDefs = gql`
   ${classPartials.types}
@@ -13,6 +14,7 @@ const typeDefs = gql`
   ${imagePartials.types}
   ${userPartials.types}
   ${applicationPartials.types}
+  ${computerPartials.types}
 
   type Query {
     ${classPartials.queries}
@@ -20,6 +22,7 @@ const typeDefs = gql`
     ${imagePartials.queries}
     ${userPartials.queries}
     ${applicationPartials.queries}
+    ${computerPartials.queries}
   }
   
   type Mutation {
@@ -29,6 +32,7 @@ const typeDefs = gql`
     ${imagePartials.mutations}
     ${userPartials.mutations}
     ${applicationPartials.mutations}
+    ${computerPartials.mutations}
   }
 `;
 
@@ -39,6 +43,7 @@ const resolvers = {
     ...imagePartials.resolvers.Query,
     ...userPartials.resolvers.Query,
     ...applicationPartials.resolvers.Query,
+    ...computerPartials.resolvers.Query,
   },
   Mutation: {
     ...classPartials.resolvers.Mutation,
@@ -47,6 +52,7 @@ const resolvers = {
     ...imagePartials.resolvers.Mutation,
     ...userPartials.resolvers.Mutation,
     ...applicationPartials.resolvers.Mutation,
+    ...computerPartials.resolvers.Mutation,
   },
   Image: {
     ...imagePartials.resolvers.Image,
@@ -59,6 +65,9 @@ const resolvers = {
   },
   Application: {
     ...applicationPartials.resolvers.Application,
+  },
+  Computer: {
+    ...computerPartials.resolvers.Computer,
   },
 };
 

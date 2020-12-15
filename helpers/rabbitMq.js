@@ -7,9 +7,43 @@ const Dynamsoft = require('dynamsoft-node-barcode');
 const { Session } = require('../models/session');
 const { Class } = require('../models/class');
 const { Recognition } = require('../models/recognition');
-const { recognizeFullSingleImage } = require('./recognizeFullSingleImage')
+const { recognizeFullSingleImage } = require('./recognizeFullSingleImage');
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
+const webcamOptions = {
+  //Picture related
+  width: 2880,
+  height: 1620,
+  quality: 90,
+
+  // Number of frames to capture
+  // More the frames, longer it takes to capture
+  // Use higher framerate for quality. Ex: 60
+  frames: 1,
+  delay: 0,
+
+  //Save shots in memory
+  saveShots: true,
+
+  // [jpeg, png] support varies
+  // Webcam.OutputTypes
+  output: "jpeg",
+
+  //Which camera to use
+  //Use Webcam.list() for results
+  //false for default device
+  device: false,
+
+  // [location, buffer, base64]
+  // Webcam.CallbackReturnTypes
+  callbackReturn: "buffer",
+
+  //Logging
+  verbose: false
+
+};
+
+const Webcam = NodeWebcam.create( webcamOptions );
 
 let channel;
 let reader;
@@ -23,57 +57,6 @@ const init = async (amqpUrl) => {
 const close = () => {
   // channel.close()
 };
-
-const webcamOptions = {
-
-  //Picture related
-
-  width: 2880,
-
-  height: 1620,
-
-  quality: 90,
-
-  // Number of frames to capture
-  // More the frames, longer it takes to capture
-  // Use higher framerate for quality. Ex: 60
-
-  frames: 1,
-
-  delay: 0,
-
-
-  //Save shots in memory
-
-  saveShots: true,
-
-
-  // [jpeg, png] support varies
-  // Webcam.OutputTypes
-
-  output: "jpeg",
-
-
-  //Which camera to use
-  //Use Webcam.list() for results
-  //false for default device
-
-  device: false,
-
-
-  // [location, buffer, base64]
-  // Webcam.CallbackReturnTypes
-
-  callbackReturn: "buffer",
-
-
-  //Logging
-
-  verbose: false
-
-};
-
-const Webcam = NodeWebcam.create( webcamOptions );
 
 const publish = async (queue, message) => {
   try {
@@ -101,21 +84,17 @@ const consume = async (queue, callback) => {
 
 const startAll = () => {
   consume('session_start', async (message) => {
-    const classes = await Class.find({ make: message.brands });
-    message.classes = classes.map((el) => el.name);
-
-    const session = await Session.create(message);
-    console.log(
-      `RabbitMQ: New session created at position ${session.positionId} from supplier ${session.supplier}`
-    );
+    publish(`computer_${message.positionId}`, {
+      topic: "session_start",
+      payload: message,
+    })
   });
 
   consume('session_end', async ({ positionId }) => {
-    await Session.updateMany(
-      { positionId },
-      { $set: { inProgress: false, updatedAt: Date.now() } }
-    );
-    console.log(`RabbitMQ: Session closed at position ${positionId}`);
+    publish(`computer_${positionId}`, {
+      topic: "session_end",
+      payload: { positionId },
+    })
   });
 
   consume(
@@ -138,37 +117,36 @@ const startAll = () => {
   consume(
     'take_snapshot',
     async({ positionId }) => {
+      publish(`computer_${positionId}`, {
+        topic: "take_snapshot",
+        payload: { positionId },
+      })
+    }
+  );
+
+  consume(
+    `computer_${process.env.COMPUTER_POSITION}`,
+    async({ topic, payload }) => {
       try {
-        console.log(`RabbitMQ: Receive "Take Snapshot" for ${positionId}`);
-        Webcam.capture( "images/input", function( err, data ) {
-          if (err) {
-            console.log(err);
-            return;
-          }
-          console.log(data);
-          recognizeFullSingleImage(data, positionId, reader)
-            .then(recognitionData => {
-              publish('recognitions', recognitionData);
-            })
-            .catch(err => console.log(err));
-        });
+        console.log(`Receive: ${topic}, ${JSON.stringify(payload)}`);
+        await handleRabbitMqTopic(topic, payload, reader);
       } catch (error) {
         console.error(
-          `RabbitMQ: Receive "Take Snapshot" event, but can't handle it: ${error}`
+          `RabbitMQ: Receive computer topic: ${topic}, but can't handle it: ${error}`
         );
       }
     }
   );
 
   // publish("take_snapshot", {
-  //   positionId: 2,
+  //   positionId: 1,
   // })
   // publish("session_start", {
-  //   positionId: 2,
+  //   positionId: 1,
   //   supplier: "ADIDAS ESPAÑA, S.A.U.",
   //   brands: ["ADIDAS", "REEBOK", "ROCKPORT"],
   // })
-  // publish("session_end", { positionId: 2 })
+  // publish("session_end", { positionId: 1 })
   // publish("recognition_feedback", {
   //   recognitionId: "5f057a05f6580a1733dea2be",
   //   brand: "W.A.U",
@@ -181,5 +159,51 @@ const startAll = () => {
   //   size: "36",
   // })
 };
+
+async function handleRabbitMqTopic(topic, payload, reader) {
+  switch (topic){
+    case 'session_start':
+      const classes = await Class.find({ make: payload.brands });
+      payload.classes = classes.map((el) => el.name);
+
+      const session = await Session.create(payload);
+      console.log(
+        `RabbitMQ: New session created at position ${session.positionId} from supplier ${session.supplier}`
+      );
+      break;
+
+
+    case 'session_end':
+      await Session.updateMany(
+        { positionId: payload.positionId },
+        { $set: { inProgress: false, updatedAt: Date.now() } }
+      );
+      console.log(`RabbitMQ: Session closed at position ${payload.positionId}`);
+      break;
+
+
+    case 'take_snapshot':
+      try {
+        console.log(`RabbitMQ: Receive "Take Snapshot" for ${payload.positionId}`);
+        Webcam.capture( "images/input", function( err, data ) {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          console.log(data);
+          recognizeFullSingleImage(data, payload.positionId, reader)
+            .then(recognitionData => {
+              publish('recognitions', recognitionData);
+            })
+            .catch(err => console.log(err));
+        });
+      } catch (error) {
+        console.error(
+          `RabbitMQ: Receive "Take Snapshot" event, but can't handle it: ${error}`
+        );
+      }
+      break;
+  }
+}
 
 module.exports = { init, close, startAll, publish };
