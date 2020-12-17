@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Model } = require('../models/model');
+const { Computer } = require('../models/computer');
 const { errorIfNotAuthenticated } = require('../helpers/authentication');
+const { restartPythonApi } = require('../helpers/restartPythonApi');
 
 const types = `
   type Model {
@@ -32,31 +34,20 @@ const resolvers = {
   Mutation: {
     activateModel: async (_, { path }, { me }) => {
       errorIfNotAuthenticated(me);
-      const mod = await  Model.findOne({ path });
+      const mod = await Model.findOne({ path });
       if (!mod) return null;
 
-      const old = await Model.findOne({ is_active: true });
-      if (!old) return null;
-
-      mod.is_active = true;
-      old.is_active = false;
-      old.save();
-
-      const { exec } = require('child_process');
-      console.info('restart flask-api');
-      exec(
-        process.env.TERMINAL_COMMAND_TO_RESTART_PYTHON_API,
-        (err, stdout, stderr) => {
-          if (err) {
-              console.log(err);
-              return {success: false};
-          } 
-              console.log(`stdout: ${stdout}`);
-              console.log(`stderr: ${stderr}`);
-          
+      const computer = await Computer.findOne({
+        position: +process.env.COMPUTER_POSITION,
       });
+      computer.active_model = mod._id;
+      computer.save();
 
-      return mod.save();
+      const result = await restartPythonApi();
+
+      if (!result) return null;
+
+      return mod;
     },
     deleteModel: async (_, { path }) => {
       errorIfNotAuthenticated(me);
@@ -67,6 +58,14 @@ const resolvers = {
       const res = await Model.deleteOne({ path });
 
       return true;
+    },
+  },
+  Model: {
+    is_active: async ({ id }) => {
+      const computer = await Computer.findOne({
+        position: +process.env.COMPUTER_POSITION,
+      });
+      return `${computer.active_model}` === `${id}`;
     },
   },
 };

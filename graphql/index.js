@@ -69,6 +69,9 @@ const resolvers = {
   Computer: {
     ...computerPartials.resolvers.Computer,
   },
+  Model: {
+    ...modelPartials.resolvers.Model,
+  },
 };
 
 module.exports = { typeDefs, resolvers };

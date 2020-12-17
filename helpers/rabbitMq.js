@@ -8,6 +8,7 @@ const { Session } = require('../models/session');
 const { Class } = require('../models/class');
 const { Recognition } = require('../models/recognition');
 const { recognizeFullSingleImage } = require('./recognizeFullSingleImage');
+const { restartPythonApi } = require('./restartPythonApi');
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 const webcamOptions = {
@@ -198,6 +199,23 @@ async function handleRabbitMqTopic(topic, payload, reader) {
           `RabbitMQ: Receive "Take Snapshot" event, but can't handle it: ${error}`
         );
       }
+      break;
+
+    case 'restart_python_api':
+      try {
+        console.log(
+          `RabbitMQ: Receive "restart_python_api" for ${payload.positionId}`
+        );
+        await restartPythonApi();
+      } catch (error) {
+        console.error(
+          `RabbitMQ: Receive "Take restart_python_api" event, but something went wrong: ${error}`
+        );
+      }
+      break;
+
+    default:
+      console.error(`This topic: ${topic} can't be handled!`);
       break;
   }
 }
