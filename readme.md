@@ -79,3 +79,7 @@ topics:
 - "session_end" - the same situation
 - "take_snapshot" - resend "take_snapshot" to specific computer to use it local camera
 - "restart_python_api" - due to new training or model changing we need to restart our `flask-app` - this is endpoint for it
+
+# Architecture:
+
+![img.png](examples/client-server.png)
