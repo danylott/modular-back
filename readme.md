@@ -1,44 +1,81 @@
-# Krack Backend App
+# Krack OCR `back-end`
 
-Stack:
+The main `back-end` for Krack OCR system, that handle all communications with admin/classifier/SGA and handle barcodes reading
+
+# Installation:
+- git clone https://danylott@bitbucket.org/galvintec/krack_ocr_back.git
+- git checkout client/server (choose here what you currently need - if not sure - choose the server)
+- npm install
+- nano .env (create .env file from the env.sample)
+- npm start
+
+Requires `flask-app`(python classifier) to be running
+
+# Features:
 - Node.js
 - GraphQL
 - Mongo
-- AMQP
+- AMQP (RabbitMQ)
 - Dynamsoft.BarcodeReader
 
-Services:
-- GraphQL API for admin
-- AMQP Queue Consuming service
-- Stream handler
+# Services:
+- GraphQL API for admin and classifier communication (use localhost:4000 to test schema)
+- AMQP Queue Consuming service (for communication with SGA and for client-server messaging) - 
+  visit `helpers/rabbitMq.js` for more details
+- `image-server` - for transporting images to front-end through http: `python3 -m http.server`
 
-Requires PYTHON_API to be running
+# Communications:
 
-## API Local Deploy
+We have 2 kinds of RabbitMQ(AMQP) communications: with SGA(front-end for users) and with `client` computers
 
-- Install mongo
-- Create DB called 'krack'
-- Run `npm start`
-- Go to http://localhost:4000/
-You can use Schema and Docs to check API possibilities
+#### SGA:
 
-## AMQP Queue Consuming
+we have 5 queues for messaging:
+```javascript
+  publish("session_start", {
+    positionId: 1,
+    supplier: "ADIDAS ESPAÑA, S.A.U.",
+    brands: ["ADIDAS", "REEBOK", "ROCKPORT"],
+  })
+  publish("session_end", { positionId: 1 })
+  publish("take_snapshot", {
+    positionId: 1,
+  })
+  publish("recognitions", { recognition_data })
+  publish("recognition_feedback", {
+    recognitionId: "5f057a05f6580a1733dea2be",
+    brand: "W.A.U",
+    model: {
+      reference: "103553",
+      name: "BOHO",
+      supplirReference: "WS96111",
+    },
+    color: "VERDE",
+    size: "36",
+  })
+```
+- "session_start" - (receive) means, that working process is started with brands and for some computer(positionId)
+- "session_end" - (receive) means, that working process ends for the specific computer
+- "take_snapshot" - (receive) endpoint, for taking snapshot from a local camera, process image with barcode reader 
+  and classifier and send back to recognitions queue
+- "recognitions" (send) - queue for sending recognitions
+- "recognition_feedback" - (receive) - queue for getting feedback, if recognition was successful or not
 
-- Run `npm start`
-- Queues consumes in index.js
+#### `client` computers:
 
-## Stream Script
+we have 1 queue for each computer (even for server computer also), each computer has `COMPUTER_POSITION`,
+that is the same with positionId in the queues higher
+The server computer will distribute incoming messages into computers queues for correct working.
 
-To run single preloaded image run:
-`node stream.js --position 2 --test`
+```javascript
+  publish(`computer_${COMPUTER_POSITION}`, { 
+    topic: 'some_topic_here',
+    payload,
+})
+```
 
-Image should be loaded to /images/input.jpg
-
-To pipe image stream to stream.js run:
-`ffmpeg -f avfoundation  -framerate 30 -i "0" -update 1 -r 1 -f image2 - | node stream.js --position 2`
-where:
-- -r - output framerate
-- -f - output format
-
-For more details use
-`ffmpeg -h`
+topics:
+- "session_start" - just resending "session_start", that comes from SGA to specific computer
+- "session_end" - the same situation
+- "take_snapshot" - resend "take_snapshot" to specific computer to use it local camera
+- "restart_python_api" - due to new training or model changing we need to restart our `flask-app` - this is endpoint for it
