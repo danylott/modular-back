@@ -9,7 +9,7 @@ const { Class } = require('../models/class');
 const { Recognition } = require('../models/recognition');
 const { recognizeFullSingleImage } = require('./recognizeFullSingleImage');
 const { restartPythonApi } = require('./restartPythonApi');
-const { Image } = require("../models/image");
+const { Image } = require('../models/image');
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 const webcamOptions = {
@@ -60,8 +60,8 @@ const close = () => {
 };
 
 const classReadyForTraining = (className) => {
-  const instance = Class.find({name:className});
-  return Image.find({cls: instance}).count() > 10 && instance.markup;//cls.count_labeled_images??
+  const instance = Class.find({ name: className });
+  return instance.count_labeled_images() >= process.env.NUMBER_OF_IMAGES_FOR_CLASS_TO_BE_AVAILABLE && instance.markup;
 };
 
 const publish = async (queue, message) => {
@@ -141,24 +141,23 @@ const startAll = () => {
     }
   );
 
-  consume("classes_check", async ({ classList }) => {
-    let availableClasses = []
-    let notAvailableClasses = []
+  consume('classes_check', async ({ classList }) => {
+    const availableClasses = [];
+    const notAvailableClasses = [];
     classList.forEach((item) => {
-      classReadyForTraining(item) ? 
-      availableClasses.push(item) :
-      notAvailableClasses.push(item)
-    })
-    if (notAvailableClasses.length == 0){
-      publish("classes_result", {
-        topic: "success",
+      classReadyForTraining(item)
+        ? availableClasses.push(item)
+        : notAvailableClasses.push(item);
+    });
+    if (notAvailableClasses.length == 0) {
+      publish('classes_result', {
+        topic: 'success',
       });
-    }
-    else{
-      publish("classes_result", {
-        available_classes: availableClasses, 
-        not_available_classes: notAvailableClasses, 
-      })
+    } else {
+      publish('classes_result', {
+        available_classes: availableClasses,
+        not_available_classes: notAvailableClasses,
+      });
     }
   });
 
