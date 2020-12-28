@@ -9,6 +9,7 @@ const { Class } = require('../models/class');
 const { Recognition } = require('../models/recognition');
 const { recognizeFullSingleImage } = require('./recognizeFullSingleImage');
 const { restartPythonApi } = require('./restartPythonApi');
+const { Image } = require("../models/image");
 
 Dynamsoft.BarcodeReader.productKeys = process.env.DYNAMSOFT_PRODUCT_KEY;
 const webcamOptions = {
@@ -56,6 +57,11 @@ const init = async (amqpUrl) => {
 
 const close = () => {
   // channel.close()
+};
+
+const classReadyForTraining = (className) => {
+  const instance = Class.find({name:className});
+  return Image.find({cls: instance}).count() > 10 && instance.markup;//cls.count_labeled_images??
 };
 
 const publish = async (queue, message) => {
@@ -134,6 +140,27 @@ const startAll = () => {
       }
     }
   );
+
+  consume("classes_check", async ({ classList }) => {
+    let availableClasses = []
+    let notAvailableClasses = []
+    classList.forEach((item) => {
+      classReadyForTraining(item) ? 
+      availableClasses.push(item) :
+      notAvailableClasses.push(item)
+    })
+    if (notAvailableClasses.length == 0){
+      publish("classes_result", {
+        topic: "success",
+      });
+    }
+    else{
+      publish("classes_result", {
+        available_classes: availableClasses, 
+        not_available_classes: notAvailableClasses, 
+      })
+    }
+  });
 
   // publish("take_snapshot", {
   //   positionId: 1,
