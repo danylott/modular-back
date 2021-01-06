@@ -81,6 +81,24 @@ const consume = async (queue, callback) => {
       if (message) {
         callback(JSON.parse(message.content.toString()));
         channel.ack(message);
+        console.log('got RabbitMQ message!');
+        console.log(message);
+      }
+    });
+  } catch (error) {
+    console.error(error, 'RabbitMQ: Unable to connect to cluster');
+  }
+};
+
+const consumeUndurable = async (queue, callback) => {
+  try {
+    await channel.assertQueue(queue, { durable: false });
+    channel.consume(queue, function(message) {
+      if (message) {
+        // callback(JSON.parse(message.content.toString()));
+        // channel.ack(message);
+        console.log('got RabbitMQ message!');
+        console.log(message.content.toString());
       }
     });
   } catch (error) {
@@ -160,6 +178,8 @@ const startAll = () => {
       });
     }
   });
+
+  consumeUndurable('train_log', async (text) => {});
 
   // publish("take_snapshot", {
   //   positionId: 1,
